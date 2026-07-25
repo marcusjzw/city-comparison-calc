@@ -1,0 +1,162 @@
+{
+  "id": "san-francisco",
+  "name": "San Francisco Bay Area",
+  "country": "United States",
+  "currency": "USD",
+  "taxYearLabel": "2026",
+  "asOf": "2026-07-23",
+  "verified": false,
+  "freshnessDays": 180,
+  "sources": [
+    {
+      "label": "IRS — Revenue Procedure 2025-32 (2026 inflation adjustments)",
+      "url": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf"
+    },
+    {
+      "label": "California FTB — Tax rate schedules",
+      "url": "https://www.ftb.ca.gov/forms/2025/2025-california-tax-rate-schedules.pdf"
+    },
+    {
+      "label": "SSA — Contribution and benefit base",
+      "url": "https://www.ssa.gov/oact/cola/cbb.html"
+    }
+  ],
+  "requiredRules": [
+    "us-federal",
+    "us-california",
+    "us-ca-mental-health",
+    "us-social-security",
+    "us-medicare",
+    "us-additional-medicare"
+  ],
+  "filingStatuses": ["single", "married_joint"],
+  "taxRules": [
+    {
+      "id": "us-federal",
+      "label": "Federal income tax",
+      "kind": "brackets",
+      "base": "taxableAfterDeduction",
+      "category": "income",
+      "note": "Thresholds are stated AFTER the standard deduction, which is applied inside this rule. Joint bands are close to double the single ones but not exactly, so they are stated rather than derived.",
+      "standardDeduction": 16100,
+      "brackets": [
+        { "upTo": 12400, "rate": 0.1 },
+        { "upTo": 50400, "rate": 0.12 },
+        { "upTo": 105700, "rate": 0.22 },
+        { "upTo": 201775, "rate": 0.24 },
+        { "upTo": 256225, "rate": 0.32 },
+        { "upTo": 640600, "rate": 0.35 },
+        { "upTo": null, "rate": 0.37 }
+      ],
+      "byStatus": {
+        "married_joint": {
+          "standardDeduction": 32200,
+          "brackets": [
+            { "upTo": 24800, "rate": 0.1 },
+            { "upTo": 100800, "rate": 0.12 },
+            { "upTo": 211400, "rate": 0.22 },
+            { "upTo": 403550, "rate": 0.24 },
+            { "upTo": 512450, "rate": 0.32 },
+            { "upTo": 768700, "rate": 0.35 },
+            { "upTo": null, "rate": 0.37 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "us-california",
+      "label": "California income tax",
+      "kind": "brackets",
+      "base": "taxableAfterDeduction",
+      "category": "income",
+      "note": "Nine brackets, 1% to 12.3%. The state standard deduction is small and public sources disagree between $5,540 and $5,706 — this uses $5,706 and needs confirming against the FTB schedule.",
+      "standardDeduction": 5706,
+      "brackets": [
+        { "upTo": 10756, "rate": 0.01 },
+        { "upTo": 25499, "rate": 0.02 },
+        { "upTo": 40245, "rate": 0.04 },
+        { "upTo": 55866, "rate": 0.06 },
+        { "upTo": 70606, "rate": 0.08 },
+        { "upTo": 360659, "rate": 0.093 },
+        { "upTo": 432787, "rate": 0.103 },
+        { "upTo": 721314, "rate": 0.113 },
+        { "upTo": null, "rate": 0.123 }
+      ],
+      "byStatus": {
+        "married_joint": {
+          "standardDeduction": 11412,
+          "brackets": [
+            { "upTo": 21512, "rate": 0.01 },
+            { "upTo": 50998, "rate": 0.02 },
+            { "upTo": 80490, "rate": 0.04 },
+            { "upTo": 111732, "rate": 0.06 },
+            { "upTo": 141212, "rate": 0.08 },
+            { "upTo": 721318, "rate": 0.093 },
+            { "upTo": 865574, "rate": 0.103 },
+            { "upTo": 1442628, "rate": 0.113 },
+            { "upTo": null, "rate": 0.123 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "us-ca-mental-health",
+      "label": "California mental health surcharge",
+      "kind": "surcharge",
+      "base": "taxableAfterDeduction",
+      "category": "income",
+      "rate": 0.01,
+      "threshold": 1000000
+    }
+  ],
+  "payroll": [
+    {
+      "id": "us-social-security",
+      "label": "Social Security",
+      "kind": "flat",
+      "base": "wages",
+      "category": "payroll",
+      "rate": 0.062,
+      "cappedAt": 184500,
+      "note": "The wage base is indexed annually. The 2025 figure of $176,100 is still widely republished as current — read it from the SSA page each year."
+    },
+    {
+      "id": "us-medicare",
+      "label": "Medicare",
+      "kind": "flat",
+      "base": "wages",
+      "category": "payroll",
+      "rate": 0.0145
+    },
+    {
+      "id": "us-additional-medicare",
+      "label": "Additional Medicare",
+      "kind": "surcharge",
+      "base": "wages",
+      "category": "payroll",
+      "rate": 0.009,
+      "threshold": 200000,
+      "byStatus": { "married_joint": { "threshold": 250000 } }
+    }
+  ],
+  "mandatoryRetirement": null,
+  "healthAnnualCost": 4000,
+  "healthNote": "Defaults to a generous employer covering premiums with light usage. The average US worker contributes around $6,850 a year for family coverage, before deductibles. Edit this.",
+  "notes": [
+    "Filing status matters here and only here: doubling the bands moves the required gross by tens of thousands.",
+    "401(k) is voluntary, so it is not modelled as mandatory retirement. Put employee contributions in pre-tax deductions.",
+    "No capital gains tax, AMT, itemised deductions, or treaty relief is modelled."
+  ],
+  "colBasket": [
+    { "id": "housing", "label": "Housing", "monthlyMedian": 3200, "confidence": "estimated", "note": "Bay Area rent has the widest spread of any figure in this app. Replace it with a real listing." },
+    { "id": "groceries", "label": "Groceries", "monthlyMedian": 700, "confidence": "derived" },
+    { "id": "dining", "label": "Eating out and drinks", "monthlyMedian": 550, "confidence": "derived" },
+    { "id": "transport", "label": "Transport", "monthlyMedian": 300, "confidence": "derived", "note": "Assumes one car. Insurance and parking are the volatile parts." },
+    { "id": "utilities", "label": "Utilities and connectivity", "monthlyMedian": 280, "confidence": "derived" },
+    { "id": "health", "label": "Health and insurance", "monthlyMedian": 150, "confidence": "estimated", "note": "Out-of-pocket only. The premium sits in the separate health cost field so it is not counted twice." },
+    { "id": "childcare", "label": "Childcare and education", "monthlyMedian": 380, "confidence": "estimated" },
+    { "id": "leisure", "label": "Leisure and subscriptions", "monthlyMedian": 280, "confidence": "derived" },
+    { "id": "travel", "label": "Travel and flights home", "monthlyMedian": 350, "confidence": "estimated" },
+    { "id": "other", "label": "Everything else", "monthlyMedian": 200, "confidence": "estimated" }
+  ]
+}

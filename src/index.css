@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+
+/*
+ * Roundtrip design tokens.
+ *
+ * The palette is taken from banknote inks rather than a UI kit. The surface is
+ * a deep intaglio plate and stays quiet; the three currency inks carry all the
+ * colour, and each city keeps its ink across every card, chart and number.
+ */
+@theme {
+  --color-ground: #0d1519;
+  --color-plate: #131f25;
+  --color-line: #24363e;
+  --color-ink: #e8eff1;
+  --color-muted: #8ca3ac;
+
+  --font-display: 'Bodoni Moda', 'Times New Roman', serif;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+}
+
+:root {
+  color-scheme: dark;
+  /* Currency inks. Assigned by currency, so a new city inherits one for free. */
+  --ink-AUD: #4fa97b;
+  --ink-SGD: #5b8fd6;
+  --ink-USD: #d08a3c;
+  --ink-default: #8ca3ac;
+}
+
+html {
+  background: var(--color-ground);
+}
+
+body {
+  margin: 0;
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Tabular figures are a functional requirement, not a taste call: numbers must
+ * not shift horizontally while they animate.
+ */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Visible focus everywhere. Keyboard reachability is a correctness bar item. */
+:where(button, input, select, a, [tabindex]):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+input[type='range'] {
+  accent-color: var(--stream, var(--color-muted));
+}
+
+/* Numeric inputs: the spinners fight tabular alignment. */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
