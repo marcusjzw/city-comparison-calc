@@ -67,22 +67,17 @@ export function BasketEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="max-w-prose font-sans text-[11px] leading-relaxed text-muted">
-          Defaults are medians for a professional household, scaled by what you
-          actually spend at home. Every line you correct makes this more yours
-          and less an average.
-        </p>
-        {edited && (
+      {edited && (
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={() => onReset()}
-            className="shrink-0 font-mono text-[11px] text-muted underline underline-offset-2 hover:text-ink"
+            className="font-mono text-[11px] text-muted underline underline-offset-2 hover:text-ink"
           >
             reset all
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         {basket.map((line) => {
@@ -171,8 +166,8 @@ export function BasketEditor({
       </div>
 
       <div>
-        <h4 className="font-sans text-[12px] font-medium text-ink">
-          What a 10% change is worth
+        <h4 className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">
+          Worth of a 10% change
         </h4>
         <div className="mt-2 space-y-2">
           {sensitivity.map((entry) => (
@@ -198,9 +193,8 @@ export function BasketEditor({
             </div>
           ))}
         </div>
-        <p className="mt-2 font-sans text-[10.5px] text-muted">
-          Impact on annual surplus, in home currency. Go and research the top one
-          properly — the default is only a median.
+        <p className="mt-2 font-mono text-[10px] text-muted/70">
+          on annual surplus, {homeCurrency}
         </p>
       </div>
     </div>

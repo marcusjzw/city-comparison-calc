@@ -217,28 +217,45 @@ export function CityCard({
           )}
         </AnimatePresence>
 
+        {/* Tax figures never appear without their stamp and a way through to
+            the source. One line does that; the full list is one click away. */}
         <footer className="mt-5 border-t border-line pt-3">
-          <p className="font-mono text-[10px] leading-relaxed text-muted">
-            {city.taxYearLabel} rates,{' '}
-            {city.verified ? 'verified' : 'seeded'} {shortDate(city.asOf)}
+          <p className="font-mono text-[10px] text-muted">
+            <a
+              href={city.sources[0]?.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              onClick={(event) => event.stopPropagation()}
+              className="underline underline-offset-2 hover:text-ink"
+            >
+              {city.taxYearLabel} rates, {city.verified ? 'verified' : 'seeded'}{' '}
+              {shortDate(city.asOf)}
+            </a>
             {outcome.freshness !== 'fresh' && (
               <span className="text-ink"> · {outcome.freshness}</span>
             )}
           </p>
-          <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-            {city.sources.map((source) => (
-              <a
-                key={source.url}
-                href={source.url}
-                target="_blank"
-                rel="noreferrer noopener"
-                onClick={(event) => event.stopPropagation()}
-                className="font-mono text-[10px] text-muted underline underline-offset-2 hover:text-ink"
-              >
-                {source.label}
-              </a>
-            ))}
-          </p>
+          {city.sources.length > 1 && (
+            <details className="mt-1" onClick={(event) => event.stopPropagation()}>
+              <summary className="cursor-pointer list-none font-mono text-[10px] text-muted marker:content-none hover:text-ink">
+                {city.sources.length} sources
+              </summary>
+              <ul className="mt-1 space-y-1">
+                {city.sources.map((source) => (
+                  <li key={source.url}>
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="font-mono text-[10px] text-muted underline underline-offset-2 hover:text-ink"
+                    >
+                      {source.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </footer>
       </div>
     </motion.article>

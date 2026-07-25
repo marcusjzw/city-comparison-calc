@@ -5,17 +5,17 @@ const MODES: { id: Mode; label: string; blurb: string }[] = [
   {
     id: 'lifestyle',
     label: 'Lifestyle parity',
-    blurb: 'The comp that keeps your standard of living exactly where it is.',
+    blurb: 'Same standard of living.',
   },
   {
     id: 'savings',
     label: 'Savings parity',
-    blurb: 'The comp that keeps your annual savings the same, back in home currency.',
+    blurb: 'Same annual savings, in home currency.',
   },
   {
     id: 'goal',
     label: 'Goal',
-    blurb: 'The comp that gets you to your number by your date. This is the one that matters.',
+    blurb: 'Your number, by your date.',
   },
 ];
 
@@ -56,9 +56,7 @@ export function ModeSelector({
           );
         })}
       </div>
-      <p className="mt-3 max-w-prose font-sans text-[13px] leading-relaxed text-muted">
-        {active.blurb}
-      </p>
+      <p className="mt-3 font-sans text-[13px] text-muted">{active.blurb}</p>
     </div>
   );
 }

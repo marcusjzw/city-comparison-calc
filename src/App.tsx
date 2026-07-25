@@ -7,6 +7,7 @@ import { useFx } from './state/useFx';
 import { useScenario } from './state/useScenario';
 import { CityCard, type Panel } from './ui/CityCard';
 import { CurrencySelector } from './ui/CurrencySelector';
+import { Disclosure } from './ui/Disclosure';
 import { FlowRibbon } from './ui/FlowRibbon';
 import { FxPanel } from './ui/FxPanel';
 import { Guilloche } from './ui/Guilloche';
@@ -71,19 +72,12 @@ export default function App() {
               home.
             </p>
           </div>
-          <div className="flex flex-col gap-3 sm:items-end">
-            <CurrencySelector
-              value={displayCurrency}
-              detection={detection}
-              live={live}
-              onChange={(currency) => update({ displayCurrency: currency })}
-            />
-            <p className="max-w-[38ch] font-sans text-[11px] leading-relaxed text-muted/80 sm:text-right">
-              Estimates only. Not tax or financial advice. Every figure here is
-              reproducible from the sources on each card — check them before you
-              negotiate on any of it.
-            </p>
-          </div>
+          <CurrencySelector
+            value={displayCurrency}
+            detection={detection}
+            live={live}
+            onChange={(currency) => update({ displayCurrency: currency })}
+          />
         </header>
 
         {stale.length > 0 && (
@@ -135,9 +129,9 @@ export default function App() {
                 <h2 className="font-display text-[18px] text-ink">
                   {focused.city.name}
                 </h2>
-                <p className="font-mono text-[11px] text-muted">
+                <p className="tnum font-mono text-[11px] text-muted">
                   {money(focused.result.surplusHome, displayCurrency)} a year lands
-                  home · click a card to swap the ribbon
+                  home
                 </p>
               </div>
               <FlowRibbon
@@ -176,11 +170,8 @@ export default function App() {
             </section>
 
             {comparison.outcomes.some((o) => o.city.notes?.length) && (
-              <section className="space-y-3 border-t border-line pt-5">
-                <h2 className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">
-                  What this model does and does not do
-                </h2>
-                <ul className="grid gap-2 md:grid-cols-3">
+              <Disclosure summary="Assumptions" className="border-t border-line pt-5">
+                <ul className="grid gap-4 md:grid-cols-3">
                   {comparison.outcomes.map((outcome) => (
                     <li key={outcome.city.id}>
                       <p
@@ -202,14 +193,15 @@ export default function App() {
                     </li>
                   ))}
                 </ul>
-              </section>
+              </Disclosure>
             )}
           </main>
         </div>
 
         <footer className="mt-12 border-t border-line pt-5">
           <p className="font-mono text-[10.5px] leading-relaxed text-muted">
-            Exchange rates from{' '}
+            Estimates only. Not tax or financial advice. Tax figures are seeded from
+            the sources linked on each card; rates from{' '}
             <a
               href="https://frankfurter.dev"
               target="_blank"
@@ -218,9 +210,7 @@ export default function App() {
             >
               Frankfurter
             </a>
-            , sourced from central bank reference rates. Tax figures are seeded from
-            the primary government sources linked on each card. Your whole scenario
-            is in this page's URL — copy the address bar to share it.
+            . Your scenario is in this page's URL.
           </p>
         </footer>
       </div>
