@@ -5,6 +5,7 @@ import { inkFor, shortDate } from './lib/format';
 import { useFx } from './state/useFx';
 import { useScenario } from './state/useScenario';
 import { CityCard, type Panel } from './ui/CityCard';
+import { Disclosure } from './ui/Disclosure';
 import { FlowRibbon } from './ui/FlowRibbon';
 import { FxPanel } from './ui/FxPanel';
 import { Guilloche } from './ui/Guilloche';
@@ -200,16 +201,11 @@ export default function App() {
             </section>
 
             {comparison.outcomes.some((o) => o.city.notes?.length) && (
-              <details className="group border-t border-line pt-5">
-                <summary className="flex cursor-pointer list-none items-center gap-2 text-muted transition-colors hover:text-ink">
-                  <span className="font-mono text-[13px] text-faint transition-transform group-open:rotate-90">
-                    ›
-                  </span>
-                  <span className="eyebrow">
-                    Assumptions &amp; limits — what this model does and does not do
-                  </span>
-                </summary>
-                <ul className="mt-4 grid gap-5 md:grid-cols-3">
+              <Disclosure
+                summary="Assumptions & limits — what this model does and does not do"
+                className="border-t border-line pt-5"
+              >
+                <ul className="grid gap-5 md:grid-cols-3">
                   {comparison.outcomes.map((outcome) => (
                     <li key={outcome.city.id}>
                       <p
@@ -231,7 +227,7 @@ export default function App() {
                     </li>
                   ))}
                 </ul>
-              </details>
+              </Disclosure>
             )}
           </main>
         </div>
@@ -247,9 +243,7 @@ export default function App() {
             >
               Frankfurter
             </a>
-            , sourced from central bank reference rates. Tax figures are seeded from
-            the primary government sources linked on each card. Your whole scenario
-            is in this page's URL — copy the address bar to share it.
+            . Your scenario is in this page's URL.
           </p>
           <p className="max-w-[34ch] font-mono text-[10.5px] leading-relaxed text-faint md:text-right">
             Estimates only. Not tax or financial advice. Every figure is reproducible

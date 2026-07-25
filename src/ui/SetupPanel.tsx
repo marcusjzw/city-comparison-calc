@@ -1,6 +1,6 @@
 import type { Comparison, Mode, Scenario } from '../engine/scenario';
 import type { CityData } from '../engine/types';
-import { money, percent } from '../lib/format';
+import { percent } from '../lib/format';
 import { Field, Section, Toggle } from './Field';
 
 interface Props {
@@ -55,7 +55,6 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
           prefix={homeCurrency}
           value={scenario.current.equity}
           onChange={(equity) => onChange({ current: { ...scenario.current, equity } })}
-          hint="Taxed as ordinary income at vest in all three cities."
         />
         <Field
           label="Annual savings"
@@ -72,11 +71,9 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
             prefix={homeCurrency}
             value={home.spend}
             onChange={(value) => onChange({ homeSpendOverride: value })}
-            hint={
-              home.spendWasInferred
-                ? `Inferred from ${money(home.result.netIncome, homeCurrency)} net less your savings. Correct it if that looks wrong.`
-                : 'Your figure. Clear it to go back to the inferred one.'
-            }
+            hint={`${percent(home.scaleFactor - 1, 0)} ${
+              home.scaleFactor >= 1 ? 'above' : 'below'
+            } the ${home.city.name} median. Every city is priced at that multiple.`}
           />
           {!home.spendWasInferred && (
             <button
@@ -87,11 +84,6 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
               use inferred
             </button>
           )}
-          <p className="mt-2 font-mono text-[10.5px] text-muted">
-            {percent(home.scaleFactor - 1, 0)}{' '}
-            {home.scaleFactor >= 1 ? 'above' : 'below'} the {home.city.name} median
-            basket. Every city is priced at the same multiple.
-          </p>
         </div>
 
         {supportsFiling && (
@@ -125,6 +117,7 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
           just noise. Lead with the one number that matters; the refinements
           live behind an expander. */}
       {mode === 'goal' && (
+
         <Section title="What you are saving for">
           <Field
             label="Savings target"
