@@ -8,11 +8,15 @@
  * colour, and each city keeps its ink across every card, chart and number.
  */
 @theme {
-  --color-ground: #0d1519;
-  --color-plate: #131f25;
+  --color-ground: #0b1216;
+  --color-plate: #17242b;
   --color-line: #24363e;
-  --color-ink: #e8eff1;
-  --color-muted: #8ca3ac;
+  --color-ink: #eef4f6;
+  /* Secondary text. Bright enough to actually read as content. */
+  --color-muted: #9fb4bc;
+  /* Tertiary: labels, unit prefixes, provenance. Deliberately quiet so the
+   * numbers can be the loud thing. Hierarchy is carried by contrast, not size. */
+  --color-faint: #647d88;
 
   --font-display: 'Bodoni Moda', 'Times New Roman', serif;
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
@@ -21,11 +25,18 @@
 
 :root {
   color-scheme: dark;
-  /* Currency inks. Assigned by currency, so a new city inherits one for free. */
-  --ink-AUD: #4fa97b;
-  --ink-SGD: #5b8fd6;
-  --ink-USD: #d08a3c;
-  --ink-default: #8ca3ac;
+  /*
+   * Currency inks. Assigned by currency, so a new city inherits one for free.
+   * AUD is pulled toward teal (more blue channel) rather than a pure green, so
+   * that under red-green colour blindness it still separates cleanly from the
+   * USD orange — green and orange are the classic confusable pair. Every place
+   * these carry meaning (ribbon streams, reservoir, hero numbers) also carries
+   * a text label or currency symbol, so hue is never the only signal.
+   */
+  --ink-AUD: #3fc2a4;
+  --ink-SGD: #6a9ce0;
+  --ink-USD: #e2984a;
+  --ink-default: #9fb4bc;
 }
 
 html {
@@ -34,10 +45,57 @@ html {
 
 body {
   margin: 0;
-  background: var(--color-ground);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /*
+   * The plate is lit, not flat. A soft off-centre glow at the top and a slow
+   * vignette to the corners give the page the depth of a note held under a
+   * lamp, so the surface reads as pressed paper rather than a dead grey panel.
+   */
+  background:
+    radial-gradient(120% 80% at 18% -10%, #1a2a32 0%, rgba(26, 42, 50, 0) 55%),
+    radial-gradient(90% 90% at 100% 0%, #14232a 0%, rgba(20, 35, 42, 0) 45%),
+    #0b1216;
+  background-attachment: fixed;
+}
+
+/*
+ * Eyebrow: the small tracked mono label. Defined once instead of respelled on
+ * thirty elements, so the rhythm is consistent and the tracking is a decision
+ * rather than an accident.
+ */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+/*
+ * The security band. Three currency inks butted together, the way a banknote
+ * carries a colour stripe. It is the page's signature: nothing else on a
+ * finance dashboard looks like it, and it earns the three-ink system its keep.
+ */
+.rule-tricolor {
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(
+    to right,
+    var(--ink-AUD) 0 33.33%,
+    var(--ink-SGD) 33.33% 66.66%,
+    var(--ink-USD) 66.66% 100%
+  );
+}
+
+/* A card that has been struck through: elevated plate with a top highlight so
+ * it lifts off the ground instead of dissolving into it. */
+.plate-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 40%),
+    #14212890;
+  backdrop-filter: blur(2px);
 }
 
 /*

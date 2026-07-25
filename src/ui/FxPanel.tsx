@@ -32,11 +32,9 @@ export function FxPanel({
 
   return (
     <div>
-      <h2 className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">
-        Exchange rates
-      </h2>
-      <p className="mt-2 font-mono text-[10.5px] text-muted">
-        {/* The seed table already names itself, so do not say it twice. */}
+      <p className="font-mono text-[10.5px] text-faint">
+        {/* The disclosure summary is the heading now, so lead straight into the
+            provenance. The seed table already names itself; don't say it twice. */}
         {live
           ? `${fx.source} · ${shortDate(fx.asOf)}`
           : `${fx.source} · live quote pending`}
@@ -116,7 +114,7 @@ export function FxPanel({
                       }}
                     />
                   </div>
-                  <p className="mt-1 flex justify-between font-mono text-[10px] text-muted">
+                  <p className="mt-1 flex justify-between font-mono text-[10px] text-faint">
                     <span className="tnum">{series.min.toFixed(2)}</span>
                     <span>ten-year range</span>
                     <span className="tnum">{series.max.toFixed(2)}</span>
