@@ -1,4 +1,4 @@
-import type { Comparison, Scenario } from '../engine/scenario';
+import type { Comparison, Mode, Scenario } from '../engine/scenario';
 import type { CityData } from '../engine/types';
 import { percent } from '../lib/format';
 import { Field, Section, Toggle } from './Field';
@@ -7,6 +7,7 @@ interface Props {
   scenario: Scenario;
   comparison: Comparison;
   cities: CityData[];
+  mode: Mode;
   onChange: (patch: Partial<Scenario>) => void;
 }
 
@@ -23,7 +24,7 @@ interface Props {
  * is in the display currency, because that is the unit every city is being
  * compared in. Each field carries its own prefix so the two never blur.
  */
-export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
+export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Props) {
   const home = comparison.home;
   const localCurrency = home.city.currency;
   const displayCurrency = scenario.displayCurrency;
@@ -126,49 +127,67 @@ export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
         )}
       </Section>
 
-      <Section title="What you are saving for">
-        <Field
-          label="Target"
-          prefix={displayCurrency}
-          value={scenario.goal.target}
-          step={10_000}
-          onChange={(target) => onChange({ goal: { ...scenario.goal, target } })}
-        />
-        <Field
-          label="Already saved"
-          prefix={displayCurrency}
-          value={scenario.goal.existingCapital}
-          step={5_000}
-          onChange={(existingCapital) =>
-            onChange({ goal: { ...scenario.goal, existingCapital } })
-          }
-        />
-        <Field
-          label="By when"
-          suffix="years"
-          value={scenario.goal.years}
-          step={1}
-          onChange={(value) =>
-            onChange({ goal: { ...scenario.goal, years: Math.max(1, value) } })
-          }
-        />
-        <Field
-          label="Target grows"
-          suffix="% a year"
-          value={Math.round(scenario.goal.goalGrowthRate * 1000) / 10}
-          step={0.5}
-          onChange={(value) =>
-            onChange({ goal: { ...scenario.goal, goalGrowthRate: value / 100 } })
-          }
-          hint="How fast the thing gets more expensive."
-        />
+      {/* The goal only exists in Goal mode — the other two modes answer a
+          different question, so surfacing "what you're saving for" there is
+          just noise. Lead with the one number that matters; the refinements
+          live behind an expander. */}
+      {mode === 'goal' && (
+        <Section title="What you are saving for">
+          <Field
+            label="Savings target"
+            prefix={displayCurrency}
+            value={scenario.goal.target}
+            step={10_000}
+            onChange={(target) => onChange({ goal: { ...scenario.goal, target } })}
+            hint={`The ${displayCurrency} number you want to walk away with.`}
+          />
+          <Field
+            label="By when"
+            suffix="years"
+            value={scenario.goal.years}
+            step={1}
+            onChange={(value) =>
+              onChange({ goal: { ...scenario.goal, years: Math.max(1, value) } })
+            }
+          />
 
-        <Toggle
-          label="Count retirement savings"
-          checked={scenario.countRetirement}
-          onChange={(countRetirement) => onChange({ countRetirement })}
-        />
-      </Section>
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center gap-1.5 text-faint transition-colors hover:text-ink">
+              <span className="font-mono text-[11px] transition-transform group-open:rotate-90">
+                ›
+              </span>
+              <span className="font-mono text-[10.5px] tracking-wide">Fine-tune</span>
+            </summary>
+            <div className="mt-3 space-y-3 border-l border-line pl-3">
+              <Field
+                label="Already saved"
+                prefix={displayCurrency}
+                value={scenario.goal.existingCapital}
+                step={5_000}
+                onChange={(existingCapital) =>
+                  onChange({ goal: { ...scenario.goal, existingCapital } })
+                }
+              />
+              <Field
+                label="Target grows"
+                suffix="% a year"
+                value={Math.round(scenario.goal.goalGrowthRate * 1000) / 10}
+                step={0.5}
+                onChange={(value) =>
+                  onChange({ goal: { ...scenario.goal, goalGrowthRate: value / 100 } })
+                }
+                hint="How fast the thing you're saving for gets more expensive."
+              />
+              <Toggle
+                label="Count retirement toward it"
+                checked={scenario.countRetirement}
+                onChange={(countRetirement) => onChange({ countRetirement })}
+                hint="Super and the like are real money, but not money you can put into a deposit."
+              />
+            </div>
+          </details>
+        </Section>
+      )}
     </div>
   );
 }

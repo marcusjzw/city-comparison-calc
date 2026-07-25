@@ -38,10 +38,7 @@ export function CurrencySelector({ value, detection, live, onChange }: Props) {
   return (
     <div className="flex flex-col items-start gap-1 sm:items-end">
       <div className="flex items-baseline gap-2">
-        <label
-          htmlFor={id}
-          className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase"
-        >
+        <label htmlFor={id} className="eyebrow">
           Show me in
         </label>
 
@@ -68,7 +65,7 @@ export function CurrencySelector({ value, detection, live, onChange }: Props) {
         </div>
       </div>
 
-      <p className="max-w-[42ch] font-sans text-[10.5px] leading-relaxed text-muted/80 sm:text-right">
+      <p className="max-w-[42ch] font-sans text-[10.5px] leading-relaxed text-faint sm:text-right">
         {selected?.name ?? value}
         {selected?.detail && ` · ${selected.detail}`}
         {showDetectionNote && ` · ${VIA_LABEL[detection.via]}`}
