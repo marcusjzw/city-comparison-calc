@@ -1,6 +1,6 @@
 import type { Comparison, Scenario } from '../engine/scenario';
 import type { CityData } from '../engine/types';
-import { money, percent } from '../lib/format';
+import { percent } from '../lib/format';
 import { Field, Section, Toggle } from './Field';
 
 interface Props {
@@ -54,7 +54,6 @@ export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
           prefix={homeCurrency}
           value={scenario.current.equity}
           onChange={(equity) => onChange({ current: { ...scenario.current, equity } })}
-          hint="Taxed as ordinary income at vest in all three cities."
         />
         <Field
           label="Annual savings"
@@ -71,11 +70,9 @@ export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
             prefix={homeCurrency}
             value={home.spend}
             onChange={(value) => onChange({ homeSpendOverride: value })}
-            hint={
-              home.spendWasInferred
-                ? `Inferred from ${money(home.result.netIncome, homeCurrency)} net less your savings. Correct it if that looks wrong.`
-                : 'Your figure. Clear it to go back to the inferred one.'
-            }
+            hint={`${percent(home.scaleFactor - 1, 0)} ${
+              home.scaleFactor >= 1 ? 'above' : 'below'
+            } the ${home.city.name} median. Every city is priced at that multiple.`}
           />
           {!home.spendWasInferred && (
             <button
@@ -86,11 +83,6 @@ export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
               use inferred
             </button>
           )}
-          <p className="mt-2 font-mono text-[10.5px] text-muted">
-            {percent(home.scaleFactor - 1, 0)}{' '}
-            {home.scaleFactor >= 1 ? 'above' : 'below'} the {home.city.name} median
-            basket. Every city is priced at the same multiple.
-          </p>
         </div>
 
         {supportsFiling && (
@@ -153,14 +145,13 @@ export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
           onChange={(value) =>
             onChange({ goal: { ...scenario.goal, goalGrowthRate: value / 100 } })
           }
-          hint="How fast the thing you're saving for gets more expensive."
+          hint="How fast the thing gets more expensive."
         />
 
         <Toggle
-          label="Count retirement savings toward the goal"
+          label="Count retirement savings"
           checked={scenario.countRetirement}
           onChange={(countRetirement) => onChange({ countRetirement })}
-          hint="Super and the like are real money, but not money you can put into a deposit."
         />
       </Section>
     </div>

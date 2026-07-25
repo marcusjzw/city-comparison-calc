@@ -1,5 +1,6 @@
 import type { ForwardResult } from '../engine/types';
 import { money, percent, symbolFor } from '../lib/format';
+import { Disclosure } from './Disclosure';
 
 const plain = new Intl.NumberFormat('en-AU', { maximumFractionDigits: 0 });
 
@@ -20,6 +21,9 @@ export function BracketLadder({
 }) {
   const currency = result.currency;
   const unit = symbolFor(currency).trim();
+  const notes = result.rules.filter(
+    (rule): rule is typeof rule & { note: string } => Boolean(rule.note),
+  );
 
   return (
     <div className="space-y-5">
@@ -85,11 +89,6 @@ export function BracketLadder({
             </p>
           )}
 
-          {rule.note && (
-            <p className="mt-2 font-sans text-[10.5px] leading-relaxed text-muted">
-              {rule.note}
-            </p>
-          )}
         </div>
       ))}
 
@@ -99,6 +98,23 @@ export function BracketLadder({
           {money(result.totalTax, currency)} · {percent(result.effectiveTaxRate)}
         </span>
       </div>
+
+      {/* Caveats are available, not in the way. Anyone reading a bracket walk
+          will open them; nobody needs them between the bands. */}
+      {notes.length > 0 && (
+        <Disclosure summary="Notes">
+          <ul className="space-y-2">
+            {notes.map((note) => (
+              <li
+                key={note.id}
+                className="font-sans text-[10.5px] leading-relaxed text-muted"
+              >
+                <span className="text-ink">{note.label}.</span> {note.note}
+              </li>
+            ))}
+          </ul>
+        </Disclosure>
+      )}
     </div>
   );
 }
