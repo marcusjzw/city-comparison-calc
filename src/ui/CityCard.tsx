@@ -10,15 +10,16 @@ type Panel = 'tax' | 'living' | 'surplus' | 'goal';
 
 const PANEL_LABEL: Record<Panel, string> = {
   tax: 'Tax',
-  living: 'Living cost',
+  living: 'Living',
   surplus: 'Surplus',
-  goal: 'Years to goal',
+  goal: 'Goal',
 };
 
 interface Props {
   outcome: CityOutcome;
   scenario: Scenario;
   homeCurrency: string;
+  rank: number;
   leader: boolean;
   focused: boolean;
   openPanel: Panel | null;
@@ -28,10 +29,13 @@ interface Props {
   onResetBasket: (cityId: string, categoryId?: string) => void;
 }
 
+const ORDINAL = ['', '1st', '2nd', '3rd', '4th', '5th', '6th'];
+
 export function CityCard({
   outcome,
   scenario,
   homeCurrency,
+  rank,
   leader,
   focused,
   openPanel,
@@ -51,35 +55,67 @@ export function CityCard({
       layoutId={city.id}
       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
       onClick={onFocus}
-      className={`relative cursor-pointer bg-plate/70 ring-1 transition-colors ${
+      className={`plate-card relative cursor-pointer ring-1 transition-all ${
         focused ? 'ring-line' : 'ring-line/40 hover:ring-line'
-      } ${outcome.freshness === 'unverified' ? 'opacity-60' : ''}`}
-      style={{ boxShadow: focused ? `inset 0 0 0 1px ${ink}33` : undefined }}
+      } ${outcome.freshness === 'unverified' ? 'opacity-60' : ''} ${
+        leader && !unreachable ? 'sm:-translate-y-1' : ''
+      }`}
+      style={{
+        boxShadow:
+          leader && !unreachable
+            ? `0 18px 40px -24px ${ink}cc, inset 0 0 0 1px ${ink}55`
+            : focused
+              ? `inset 0 0 0 1px ${ink}33`
+              : undefined,
+      }}
     >
-      <div className="h-[3px]" style={{ background: ink }} />
+      {/* The leader wears the city's ink as a full band; the rest get a hairline,
+          so the winner is legible at a glance across the row. */}
+      <div
+        style={{ background: ink, height: leader && !unreachable ? 4 : 2 }}
+      />
 
-      <div className="p-5">
-        <header className="flex items-baseline justify-between gap-3">
-          <h3 className="font-display text-[22px] leading-none text-ink">
-            {city.name}
-          </h3>
+      {/* Leader gets a faint ink wash pooling under the headline number. */}
+      {leader && !unreachable && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-40"
+          style={{
+            background: `radial-gradient(120% 80% at 20% 0%, ${ink}1f 0%, transparent 70%)`,
+          }}
+        />
+      )}
+
+      <div className="relative p-5">
+        <header className="flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-2.5">
+            <span
+              className="font-mono text-[11px] tabular-nums"
+              style={{ color: leader && !unreachable ? ink : 'var(--color-faint)' }}
+            >
+              {unreachable ? '—' : ORDINAL[rank] ?? `${rank}th`}
+            </span>
+            <h3 className="font-display text-[23px] leading-none text-ink">
+              {city.name}
+            </h3>
+          </div>
           {leader && !unreachable && (
             <span
-              className="font-mono text-[10px] tracking-wide uppercase"
-              style={{ color: ink }}
+              className="shrink-0 rounded-full px-2.5 py-1 font-mono text-[9.5px] font-medium tracking-[0.12em] uppercase text-ground"
+              style={{ background: ink, boxShadow: `0 0 16px -2px ${ink}88` }}
             >
               smallest ask
             </span>
           )}
         </header>
 
-        {/* 1. Required gross, the number the user is going to negotiate for. */}
+        {/* 1. Required gross, the number the user is going to negotiate for.
+            Rendered in the city's own ink: the identity system doing real work
+            rather than three interchangeable white numbers. */}
         <div className="mt-5">
-          <p className="font-mono text-[10.5px] tracking-wide text-muted uppercase">
-            Gross comp needed
-          </p>
+          <p className="eyebrow">Gross comp needed</p>
           {unreachable ? (
-            <p className="mt-1 font-display text-[34px] leading-none text-muted">
+            <p className="mt-1.5 font-display text-[34px] leading-none text-muted">
               out of reach
             </p>
           ) : (
@@ -87,7 +123,8 @@ export function CityCard({
               <AnimatedNumber
                 value={outcome.requiredGross}
                 format={(v) => moneyCompact(v, city.currency)}
-                className="mt-1 block font-mono text-[40px] leading-none font-medium text-ink"
+                className="mt-1.5 block font-mono text-[42px] leading-none font-medium"
+                style={{ color: ink }}
               />
               <AnimatedNumber
                 value={outcome.requiredGrossHome}
@@ -109,24 +146,20 @@ export function CityCard({
         {/* 3 and 4. Surplus and years, the two figures the modes trade off. */}
         <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line pt-4">
           <div>
-            <dt className="font-mono text-[10.5px] tracking-wide text-muted uppercase">
-              Surplus home
-            </dt>
-            <dd>
+            <dt className="eyebrow">Surplus home</dt>
+            <dd className="mt-1">
               <AnimatedNumber
                 value={result[metric]}
                 format={(v) => money(v, homeCurrency)}
-                className="font-mono text-[16px] text-ink"
+                className="font-mono text-[17px] text-ink"
               />
             </dd>
           </div>
           <div>
-            <dt className="font-mono text-[10.5px] tracking-wide text-muted uppercase">
-              Years to goal
-            </dt>
+            <dt className="eyebrow">Years to goal</dt>
             <dd
-              className="tnum font-mono text-[16px]"
-              style={{ color: Number.isFinite(outcome.years) ? ink : undefined }}
+              className="tnum mt-1 font-mono text-[17px]"
+              style={{ color: Number.isFinite(outcome.years) ? ink : 'var(--color-muted)' }}
             >
               {years(outcome.years)}
             </dd>
@@ -145,23 +178,34 @@ export function CityCard({
           )}
         </p>
 
-        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-line pt-3">
-          {(Object.keys(PANEL_LABEL) as Panel[]).map((panel) => (
-            <button
-              key={panel}
-              type="button"
-              aria-expanded={openPanel === panel}
-              // Deliberately allowed to bubble: opening a drill-down is also a
-              // statement about which city you are looking at, so the ribbon
-              // should follow you there.
-              onClick={() => onTogglePanel(panel)}
-              className={`font-mono text-[11px] underline-offset-4 hover:text-ink ${
-                openPanel === panel ? 'text-ink underline' : 'text-muted'
-              }`}
-            >
-              {PANEL_LABEL[panel]}
-            </button>
-          ))}
+        {/* Drill-down tabs. Bordered chips so they read as controls, not
+            leftover text — and a leading "Break it down" cue so a first-timer
+            knows they open something. */}
+        <div className="mt-4 border-t border-line pt-3">
+          <p className="eyebrow mb-2">Break it down</p>
+          <div className="flex flex-wrap gap-1.5">
+            {(Object.keys(PANEL_LABEL) as Panel[]).map((panel) => {
+              const active = openPanel === panel;
+              return (
+                <button
+                  key={panel}
+                  type="button"
+                  aria-expanded={active}
+                  // Deliberately allowed to bubble: opening a drill-down is also
+                  // a statement about which city you are looking at, so the
+                  // ribbon should follow you there.
+                  onClick={() => onTogglePanel(panel)}
+                  className={`rounded border px-2.5 py-1 font-mono text-[11px] transition-colors ${
+                    active
+                      ? 'border-transparent bg-ink text-ground'
+                      : 'border-line text-muted hover:border-muted hover:text-ink'
+                  }`}
+                >
+                  {PANEL_LABEL[panel]}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Drill-downs expand in place. Not a modal, not a new page. */}
@@ -218,7 +262,7 @@ export function CityCard({
         </AnimatePresence>
 
         <footer className="mt-5 border-t border-line pt-3">
-          <p className="font-mono text-[10px] leading-relaxed text-muted">
+          <p className="font-mono text-[10px] leading-relaxed text-faint">
             {city.taxYearLabel} rates,{' '}
             {city.verified ? 'verified' : 'seeded'} {shortDate(city.asOf)}
             {outcome.freshness !== 'fresh' && (
@@ -233,7 +277,7 @@ export function CityCard({
                 target="_blank"
                 rel="noreferrer noopener"
                 onClick={(event) => event.stopPropagation()}
-                className="font-mono text-[10px] text-muted underline underline-offset-2 hover:text-ink"
+                className="font-mono text-[10px] text-faint underline underline-offset-2 hover:text-ink"
               >
                 {source.label}
               </a>

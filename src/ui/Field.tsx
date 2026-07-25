@@ -41,7 +41,7 @@ export function Field({
           {suffix && <span className="font-mono text-[12px] text-muted">{suffix}</span>}
         </div>
       </div>
-      {hint && <p className="mt-1 font-sans text-[10.5px] text-muted/80">{hint}</p>}
+      {hint && <p className="mt-1 font-sans text-[10.5px] leading-relaxed text-faint">{hint}</p>}
     </div>
   );
 }
@@ -81,7 +81,7 @@ export function Toggle({
           />
         </button>
       </div>
-      {hint && <p className="mt-1 font-sans text-[10.5px] text-muted/80">{hint}</p>}
+      {hint && <p className="mt-1 font-sans text-[10.5px] leading-relaxed text-faint">{hint}</p>}
     </div>
   );
 }
@@ -95,9 +95,7 @@ export function Section({
 }) {
   return (
     <section className="border-t border-line pt-4">
-      <h2 className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">
-        {title}
-      </h2>
+      <h2 className="eyebrow">{title}</h2>
       <div className="mt-3 space-y-3">{children}</div>
     </section>
   );

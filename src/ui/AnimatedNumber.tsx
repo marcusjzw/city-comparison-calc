@@ -5,6 +5,7 @@ interface Props {
   value: number;
   format: (value: number) => string;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 /**
@@ -17,7 +18,7 @@ interface Props {
  * Non-finite values (an unreachable goal) bypass the spring entirely — there
  * is nothing to animate toward and "never at this rate" is not a quantity.
  */
-export function AnimatedNumber({ value, format, className }: Props) {
+export function AnimatedNumber({ value, format, className, style }: Props) {
   const reduceMotion = useReducedMotion();
   const finite = Number.isFinite(value);
   const spring = useSpring(finite ? value : 0, {
@@ -39,7 +40,7 @@ export function AnimatedNumber({ value, format, className }: Props) {
   });
 
   return (
-    <span ref={ref} className={`tnum ${className ?? ''}`}>
+    <span ref={ref} className={`tnum ${className ?? ''}`} style={style}>
       {format(value)}
     </span>
   );

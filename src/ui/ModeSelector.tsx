@@ -30,7 +30,12 @@ export function ModeSelector({
 
   return (
     <div>
-      <div role="tablist" aria-label="Comparison mode" className="flex flex-wrap gap-1">
+      <p className="eyebrow mb-2">What are you optimising for?</p>
+      <div
+        role="tablist"
+        aria-label="Comparison mode"
+        className="inline-flex max-w-full gap-1 overflow-x-auto rounded-full border border-line bg-plate/50 p-1"
+      >
         {MODES.map((entry) => {
           const selected = entry.id === mode;
           return (
@@ -40,7 +45,7 @@ export function ModeSelector({
               type="button"
               aria-selected={selected}
               onClick={() => onChange(entry.id)}
-              className={`relative px-4 py-2 font-mono text-[12px] tracking-wide transition-colors ${
+              className={`relative shrink-0 rounded-full px-3.5 py-1.5 font-mono text-[11.5px] whitespace-nowrap tracking-wide transition-colors ${
                 selected ? 'text-ground' : 'text-muted hover:text-ink'
               }`}
             >
@@ -48,7 +53,7 @@ export function ModeSelector({
                 <motion.span
                   layoutId="mode-pill"
                   transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-                  className="absolute inset-0 bg-ink"
+                  className="absolute inset-0 rounded-full bg-ink"
                 />
               )}
               <span className="relative">{entry.label}</span>
@@ -56,7 +61,7 @@ export function ModeSelector({
           );
         })}
       </div>
-      <p className="mt-3 max-w-prose font-sans text-[13px] leading-relaxed text-muted">
+      <p className="mt-3 max-w-prose font-sans text-[13.5px] leading-relaxed text-muted">
         {active.blurb}
       </p>
     </div>
