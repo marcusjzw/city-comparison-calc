@@ -1,8 +1,15 @@
-/** Currency prefixes are hand-set: Intl renders AUD, SGD and USD all as "$". */
-const PREFIX: Record<string, string> = { AUD: 'A$', SGD: 'S$', USD: 'US$' };
+import { currencyOption } from '../data/currencies';
 
+/**
+ * Currency prefixes are hand-set. `Intl` renders AUD, SGD, USD, CAD, NZD and
+ * HKD all as a bare "$", which is precisely the ambiguity a cross-border
+ * calculator exists to remove — every dollar here says whose dollar it is.
+ *
+ * Anything off the supported list falls back to its ISO code, which is
+ * unambiguous even when it is not pretty.
+ */
 export function symbolFor(currency: string): string {
-  return PREFIX[currency] ?? `${currency} `;
+  return currencyOption(currency)?.symbol ?? `${currency} `;
 }
 
 const grouped = new Intl.NumberFormat('en-AU', { maximumFractionDigits: 0 });

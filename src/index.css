@@ -21,10 +21,38 @@
 
 :root {
   color-scheme: dark;
-  /* Currency inks. Assigned by currency, so a new city inherits one for free. */
+  /*
+   * Currency inks. Assigned by currency, so a new city inherits one for free.
+   * The three seeded cities come first and are the ones tuned hardest, since
+   * they carry the cards and charts. The rest exist so that picking a display
+   * currency the app has no city for still reads as a colour rather than as
+   * the "we don't know this one" grey.
+   *
+   * All of them sit in the same muted intaglio range on purpose: on a plate
+   * this dark, a saturated hue reads as an error state.
+   */
   --ink-AUD: #4fa97b;
   --ink-SGD: #5b8fd6;
   --ink-USD: #d08a3c;
+
+  --ink-EUR: #6f7fd0;
+  --ink-GBP: #b06fc4;
+  --ink-CAD: #d1636b;
+  --ink-CHF: #c9534f;
+  --ink-JPY: #d4707f;
+  --ink-HKD: #c98a53;
+  --ink-NZD: #4fa2a9;
+  --ink-INR: #d98f4a;
+  --ink-CNY: #cf6a52;
+  --ink-KRW: #7f8ed6;
+  --ink-SEK: #58a0c4;
+  --ink-NOK: #5f8ec2;
+  --ink-DKK: #b8686f;
+  --ink-PLN: #a97fc0;
+  --ink-ILS: #6ba4cf;
+  --ink-BRL: #63ad6a;
+  --ink-MXN: #8faa52;
+
   --ink-default: #8ca3ac;
 }
 

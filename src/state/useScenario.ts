@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import { FALLBACK_CURRENCY, isSupportedCurrency } from '../data/currencies';
 import type { Scenario } from '../engine/scenario';
+import { detectCurrencyFromEnvironment } from '../lib/detectCurrency';
 
 /** The user in the brief: a Sydney senior with meaningful equity and a deposit in mind. */
 export const DEFAULT_SCENARIO: Scenario = {
   homeCityId: 'sydney',
+  displayCurrency: FALLBACK_CURRENCY,
   current: { base: 181_500, equity: 130_000, annualSavings: 100_000 },
   homeSpendOverride: null,
   filingStatus: 'married_joint',
@@ -31,15 +34,37 @@ function encode(scenario: Scenario): string {
   return btoa(encodeURIComponent(JSON.stringify(scenario)));
 }
 
+/**
+ * An explicit choice always wins; detection only fills a genuine blank.
+ *
+ * A link shared from before the selector existed, or one carrying a currency
+ * we can no longer quote, has no usable answer in it — so we work one out
+ * rather than silently assuming dollars.
+ */
+function resolveCurrency(stored: unknown): string {
+  if (typeof stored === 'string' && isSupportedCurrency(stored)) return stored;
+  return detectCurrencyFromEnvironment().currency;
+}
+
 function decode(raw: string): Scenario | null {
   try {
     const parsed = JSON.parse(decodeURIComponent(atob(raw))) as Partial<Scenario>;
     if (!parsed || typeof parsed !== 'object' || !parsed.homeCityId) return null;
     // Merge over the defaults so an older link missing a newer field still opens.
-    return { ...DEFAULT_SCENARIO, ...parsed, goal: { ...DEFAULT_SCENARIO.goal, ...parsed.goal } };
+    return {
+      ...DEFAULT_SCENARIO,
+      ...parsed,
+      goal: { ...DEFAULT_SCENARIO.goal, ...parsed.goal },
+      displayCurrency: resolveCurrency(parsed.displayCurrency),
+    };
   } catch {
     return null;
   }
+}
+
+/** The starting scenario for someone who has never been here before. */
+function freshScenario(): Scenario {
+  return { ...DEFAULT_SCENARIO, displayCurrency: resolveCurrency(null) };
 }
 
 function initial(): Scenario {
@@ -48,7 +73,7 @@ function initial(): Scenario {
     : null;
   if (fromHash) return fromHash;
   const saved = localStorage.getItem(STORAGE_KEY);
-  return (saved && decode(saved)) || DEFAULT_SCENARIO;
+  return (saved && decode(saved)) || freshScenario();
 }
 
 export function useScenario() {
@@ -69,7 +94,7 @@ export function useScenario() {
     setScenario((current) => ({ ...current, ...patch }));
   }, []);
 
-  const reset = useCallback(() => setScenario(DEFAULT_SCENARIO), []);
+  const reset = useCallback(() => setScenario(freshScenario()), []);
 
   return { scenario, update, reset };
 }

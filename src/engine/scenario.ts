@@ -21,6 +21,16 @@ export type Mode = 'lifestyle' | 'savings' | 'goal';
 
 export interface Scenario {
   homeCityId: string;
+  /**
+   * The currency every cross-city figure is reported in, and the unit the goal
+   * is denominated in. Independent of the home city on purpose: a reader can
+   * live in Sydney and still think in pounds.
+   *
+   * The engine never reads this — it works entirely off `fx.homeCurrency`, and
+   * the two are kept in step by the caller. It lives here because it is part
+   * of the scenario a shared link has to reproduce.
+   */
+  displayCurrency: string;
   current: { base: number; equity: number; annualSavings: number };
   /** Overrides the inferred home spend when the user corrects it. */
   homeSpendOverride: number | null;

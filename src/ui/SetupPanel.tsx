@@ -16,10 +16,18 @@ interface Props {
  * Living costs are inferred from net income less savings rather than asked
  * for, because people know what they save far better than they know what they
  * spend. The derived figure is shown and can be corrected.
+ *
+ * Two currencies are in play here and the distinction is load-bearing. What
+ * you earn and spend today is in your home city's currency, because that is
+ * what its tax code and its rent are denominated in. What you are saving for
+ * is in the display currency, because that is the unit every city is being
+ * compared in. Each field carries its own prefix so the two never blur.
  */
 export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
   const home = comparison.home;
-  const homeCurrency = home.city.currency;
+  const localCurrency = home.city.currency;
+  const displayCurrency = scenario.displayCurrency;
+  const mixedCurrencies = localCurrency !== displayCurrency;
   const supportsFiling = cities.some((city) => city.filingStatuses?.length);
 
   return (
@@ -43,22 +51,29 @@ export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
           </select>
         </div>
 
+        {mixedCurrencies && (
+          <p className="font-sans text-[10.5px] leading-relaxed text-muted/80">
+            These four are in {localCurrency}, what {home.city.name} pays and taxes
+            you in. Everything compared across cities is shown in {displayCurrency}.
+          </p>
+        )}
+
         <Field
           label="Base salary"
-          prefix={homeCurrency}
+          prefix={localCurrency}
           value={scenario.current.base}
           onChange={(base) => onChange({ current: { ...scenario.current, base } })}
         />
         <Field
           label="Equity, annualised"
-          prefix={homeCurrency}
+          prefix={localCurrency}
           value={scenario.current.equity}
           onChange={(equity) => onChange({ current: { ...scenario.current, equity } })}
           hint="Taxed as ordinary income at vest in all three cities."
         />
         <Field
           label="Annual savings"
-          prefix={homeCurrency}
+          prefix={localCurrency}
           value={scenario.current.annualSavings}
           onChange={(annualSavings) =>
             onChange({ current: { ...scenario.current, annualSavings } })
@@ -68,12 +83,12 @@ export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
         <div className="border-l-2 border-line pl-3">
           <Field
             label="So you spend"
-            prefix={homeCurrency}
+            prefix={localCurrency}
             value={home.spend}
             onChange={(value) => onChange({ homeSpendOverride: value })}
             hint={
               home.spendWasInferred
-                ? `Inferred from ${money(home.result.netIncome, homeCurrency)} net less your savings. Correct it if that looks wrong.`
+                ? `Inferred from ${money(home.result.netIncome, localCurrency)} net less your savings. Correct it if that looks wrong.`
                 : 'Your figure. Clear it to go back to the inferred one.'
             }
           />
@@ -122,14 +137,19 @@ export function SetupPanel({ scenario, comparison, cities, onChange }: Props) {
       <Section title="What you are saving for">
         <Field
           label="Target"
-          prefix={homeCurrency}
+          prefix={displayCurrency}
           value={scenario.goal.target}
           step={10_000}
           onChange={(target) => onChange({ goal: { ...scenario.goal, target } })}
+          hint={
+            mixedCurrencies
+              ? `In ${displayCurrency}, the currency you are comparing in. Change it up top and this figure keeps its number, not its value.`
+              : undefined
+          }
         />
         <Field
           label="Already saved"
-          prefix={homeCurrency}
+          prefix={displayCurrency}
           value={scenario.goal.existingCapital}
           step={5_000}
           onChange={(existingCapital) =>

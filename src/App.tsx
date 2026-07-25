@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { CITIES } from './data/cities';
 import { compare, type Mode } from './engine/scenario';
+import { detectCurrencyFromEnvironment } from './lib/detectCurrency';
 import { money, shortDate } from './lib/format';
 import { useFx } from './state/useFx';
 import { useScenario } from './state/useScenario';
 import { CityCard, type Panel } from './ui/CityCard';
+import { CurrencySelector } from './ui/CurrencySelector';
 import { FlowRibbon } from './ui/FlowRibbon';
 import { FxPanel } from './ui/FxPanel';
 import { Guilloche } from './ui/Guilloche';
@@ -15,8 +17,14 @@ const CURRENCIES = [...new Set(CITIES.map((city) => city.currency))];
 
 export default function App() {
   const { scenario, update } = useScenario();
-  const homeCity = CITIES.find((c) => c.id === scenario.homeCityId) ?? CITIES[0];
-  const { table: fx, history, live } = useFx(homeCity.currency, CURRENCIES);
+
+  // What the reader is shown, as opposed to what each city pays and taxes in.
+  const displayCurrency = scenario.displayCurrency;
+
+  // Read once per session. Re-running it would fight the reader's own choice.
+  const [detection] = useState(detectCurrencyFromEnvironment);
+
+  const { table: fx, history, live } = useFx(displayCurrency, CURRENCIES);
 
   const comparison = useMemo(
     () => compare(scenario, CITIES, fx),
@@ -63,11 +71,19 @@ export default function App() {
               home.
             </p>
           </div>
-          <p className="max-w-[38ch] font-sans text-[11px] leading-relaxed text-muted/80">
-            Estimates only. Not tax or financial advice. Every figure here is
-            reproducible from the sources on each card — check them before you
-            negotiate on any of it.
-          </p>
+          <div className="flex flex-col gap-3 sm:items-end">
+            <CurrencySelector
+              value={displayCurrency}
+              detection={detection}
+              live={live}
+              onChange={(currency) => update({ displayCurrency: currency })}
+            />
+            <p className="max-w-[38ch] font-sans text-[11px] leading-relaxed text-muted/80 sm:text-right">
+              Estimates only. Not tax or financial advice. Every figure here is
+              reproducible from the sources on each card — check them before you
+              negotiate on any of it.
+            </p>
+          </div>
         </header>
 
         {stale.length > 0 && (
@@ -120,14 +136,14 @@ export default function App() {
                   {focused.city.name}
                 </h2>
                 <p className="font-mono text-[11px] text-muted">
-                  {money(focused.result.surplusHome, homeCity.currency)} a year lands
+                  {money(focused.result.surplusHome, displayCurrency)} a year lands
                   home · click a card to swap the ribbon
                 </p>
               </div>
               <FlowRibbon
                 outcome={focused}
                 goal={scenario.goal}
-                homeCurrency={homeCity.currency}
+                homeCurrency={displayCurrency}
                 countRetirement={scenario.countRetirement}
               />
             </section>
@@ -141,7 +157,7 @@ export default function App() {
                   key={outcome.city.id}
                   outcome={outcome}
                   scenario={scenario}
-                  homeCurrency={homeCity.currency}
+                  homeCurrency={displayCurrency}
                   leader={index === 0}
                   focused={outcome.city.id === focused.city.id}
                   openPanel={panels[outcome.city.id] ?? null}
