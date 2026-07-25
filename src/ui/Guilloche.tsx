@@ -31,9 +31,9 @@ function rosette(
 export function Guilloche({ className }: { className?: string }) {
   const paths = useMemo(
     () => [
-      { d: rosette(240, 260, 220, 47, 150, 47, 3200), stroke: 'var(--ink-AUD)' },
-      { d: rosette(760, 180, 170, 31, 120, 31, 2400), stroke: 'var(--ink-SGD)' },
-      { d: rosette(540, 620, 260, 59, 190, 59, 3600), stroke: 'var(--ink-USD)' },
+      { d: rosette(150, 210, 220, 47, 150, 47, 3200), stroke: 'var(--ink-AUD)' },
+      { d: rosette(880, 120, 170, 31, 120, 31, 2400), stroke: 'var(--ink-SGD)' },
+      { d: rosette(920, 700, 260, 59, 190, 59, 3600), stroke: 'var(--ink-USD)' },
     ],
     [],
   );

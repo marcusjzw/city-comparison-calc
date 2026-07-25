@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { CITIES } from './data/cities';
 import { compare, type Mode } from './engine/scenario';
-import { money, shortDate } from './lib/format';
+import { inkFor, shortDate } from './lib/format';
 import { useFx } from './state/useFx';
 import { useScenario } from './state/useScenario';
 import { CityCard, type Panel } from './ui/CityCard';
@@ -53,17 +53,20 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen">
-      <Guilloche className="pointer-events-none fixed inset-0 h-full w-full opacity-[0.07]" />
+      <Guilloche className="pointer-events-none fixed inset-0 h-full w-full opacity-[0.06]" />
+      <div className="rule-tricolor fixed inset-x-0 top-0 z-10" />
 
-      <div className="relative mx-auto max-w-[1360px] px-6 py-10 lg:px-10">
-        <header className="flex flex-wrap items-end justify-between gap-6 border-b border-line pb-6">
-          <div>
-            <h1 className="font-display text-[40px] leading-none text-ink">Roundtrip</h1>
-            <p className="mt-2 max-w-prose font-sans text-[14px] leading-relaxed text-muted">
-              What salary do I need over there, and what does it actually get me back
-              home.
-            </p>
-          </div>
+      <div className="relative mx-auto max-w-[1360px] px-6 py-12 lg:px-10">
+        <header className="border-b border-line pb-7">
+          <p className="eyebrow">Salary, converted · three cities</p>
+          <h1 className="mt-3 font-display text-[52px] leading-[0.95] text-ink">
+            Roundtrip
+          </h1>
+          <p className="mt-3 max-w-[52ch] font-sans text-[15px] leading-relaxed text-muted">
+            What salary do I need over there, and what does it actually get me back
+            home? Set your situation on the left, pick what you are optimising for,
+            and read it off the cards.
+          </p>
         </header>
 
         {stale.length > 0 && (
@@ -85,20 +88,32 @@ export default function App() {
               scenario={scenario}
               comparison={comparison}
               cities={CITIES}
+              mode={scenario.mode}
               onChange={update}
             />
-            <div className="border-t border-line pt-4">
-              <FxPanel
-                fx={fx}
-                history={history}
-                live={live}
-                comparison={comparison}
-                scenario={scenario}
-                onShift={(currency, shift) =>
-                  update({ fxShifts: { ...scenario.fxShifts, [currency]: shift } })
-                }
-              />
-            </div>
+            {/* FX is a power feature: consequential for a repatriating saver, but
+                not something to put in a newcomer's face. It waits behind an
+                expander until asked for. */}
+            <details className="group border-t border-line pt-4">
+              <summary className="flex cursor-pointer list-none items-center gap-2 text-muted transition-colors hover:text-ink">
+                <span className="font-mono text-[13px] text-faint transition-transform group-open:rotate-90">
+                  ›
+                </span>
+                <span className="eyebrow">Advanced · exchange-rate assumptions</span>
+              </summary>
+              <div className="mt-4">
+                <FxPanel
+                  fx={fx}
+                  history={history}
+                  live={live}
+                  comparison={comparison}
+                  scenario={scenario}
+                  onShift={(currency, shift) =>
+                    update({ fxShifts: { ...scenario.fxShifts, [currency]: shift } })
+                  }
+                />
+              </div>
+            </details>
           </aside>
 
           <main className="min-w-0 space-y-8">
@@ -107,19 +122,76 @@ export default function App() {
               onChange={(mode: Mode) => update({ mode })}
             />
 
-            <section
-              aria-label={`Where ${focused.city.name} money goes`}
-              className="border-y border-line py-4"
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <h2 className="font-display text-[18px] text-ink">
-                  {focused.city.name}
-                </h2>
-                <p className="tnum font-mono text-[11px] text-muted">
-                  {money(focused.result.surplusHome, homeCity.currency)} a year lands
-                  home
+            {/* The answer comes first: three cities, ranked by the smallest
+                salary you'd have to ask for. The flow ribbon is the detail and
+                sits below, so a newcomer reads the result before the chart. */}
+            <section aria-label="City comparison">
+              <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+                <p className="eyebrow">The ask, ranked · smallest first</p>
+                <p className="font-mono text-[11px] text-faint">
+                  each shows the gross comp you'd negotiate for
                 </p>
               </div>
+              <div className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {comparison.outcomes.map((outcome, index) => (
+                  <CityCard
+                    key={outcome.city.id}
+                    outcome={outcome}
+                    scenario={scenario}
+                    homeCurrency={homeCity.currency}
+                    rank={index + 1}
+                    leader={index === 0}
+                    focused={outcome.city.id === focused.city.id}
+                    openPanel={panels[outcome.city.id] ?? null}
+                    onFocus={() => setFocusedId(outcome.city.id)}
+                    onTogglePanel={(panel) =>
+                      setPanels((current) => ({
+                        ...current,
+                        [outcome.city.id]:
+                          current[outcome.city.id] === panel ? null : panel,
+                      }))
+                    }
+                    onSetBasket={setBasket}
+                    onResetBasket={resetBasket}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section
+              aria-label={`Where ${focused.city.name} money goes`}
+              className="border-t border-line pt-6"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <div>
+                  <p className="eyebrow">Where the money goes</p>
+                  <div className="mt-1.5 flex items-baseline gap-2.5">
+                    <span
+                      aria-hidden
+                      className="inline-block h-2.5 w-2.5 rounded-full"
+                      style={{ background: inkFor(focused.city.currency) }}
+                    />
+                    <h2 className="font-display text-[20px] text-ink">
+                      {focused.city.name}
+                    </h2>
+                  </div>
+                </div>
+                <p className="font-mono text-[11px] text-faint">
+                  selected card · click another to switch
+                </p>
+              </div>
+
+              {/* A one-line reading key so the ribbon isn't a mystery chart. */}
+              <p className="mt-2 max-w-[70ch] font-sans text-[12.5px] leading-relaxed text-muted">
+                Gross pay enters from the left and splits into{' '}
+                <span className="text-ink">tax</span> and{' '}
+                <span className="text-ink">living cost</span>; what's left — your{' '}
+                <span style={{ color: inkFor(focused.city.currency) }}>surplus</span> —
+                crosses the horizon, converts to {homeCity.currency}, and fills the{' '}
+                <span style={{ color: inkFor(homeCity.currency) }}>reservoir</span> toward
+                your goal line.
+              </p>
+
               <FlowRibbon
                 outcome={focused}
                 goal={scenario.goal}
@@ -128,49 +200,25 @@ export default function App() {
               />
             </section>
 
-            <section
-              aria-label="City comparison"
-              className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3"
-            >
-              {comparison.outcomes.map((outcome, index) => (
-                <CityCard
-                  key={outcome.city.id}
-                  outcome={outcome}
-                  scenario={scenario}
-                  homeCurrency={homeCity.currency}
-                  leader={index === 0}
-                  focused={outcome.city.id === focused.city.id}
-                  openPanel={panels[outcome.city.id] ?? null}
-                  onFocus={() => setFocusedId(outcome.city.id)}
-                  onTogglePanel={(panel) =>
-                    setPanels((current) => ({
-                      ...current,
-                      [outcome.city.id]:
-                        current[outcome.city.id] === panel ? null : panel,
-                    }))
-                  }
-                  onSetBasket={setBasket}
-                  onResetBasket={resetBasket}
-                />
-              ))}
-            </section>
-
             {comparison.outcomes.some((o) => o.city.notes?.length) && (
-              <Disclosure summary="Assumptions" className="border-t border-line pt-5">
-                <ul className="grid gap-4 md:grid-cols-3">
+              <Disclosure
+                summary="Assumptions & limits — what this model does and does not do"
+                className="border-t border-line pt-5"
+              >
+                <ul className="grid gap-5 md:grid-cols-3">
                   {comparison.outcomes.map((outcome) => (
                     <li key={outcome.city.id}>
                       <p
-                        className="font-mono text-[10.5px] tracking-wide uppercase"
+                        className="font-mono text-[10.5px] tracking-[0.1em] uppercase"
                         style={{ color: `var(--ink-${outcome.city.currency})` }}
                       >
                         {outcome.city.name}
                       </p>
-                      <ul className="mt-1 space-y-1">
+                      <ul className="mt-2 space-y-1.5">
                         {(outcome.city.notes ?? []).map((note) => (
                           <li
                             key={note}
-                            className="font-sans text-[11px] leading-relaxed text-muted"
+                            className="font-sans text-[11.5px] leading-relaxed text-muted"
                           >
                             {note}
                           </li>
@@ -184,19 +232,22 @@ export default function App() {
           </main>
         </div>
 
-        <footer className="mt-12 border-t border-line pt-5">
-          <p className="font-mono text-[10.5px] leading-relaxed text-muted">
-            Estimates only. Not tax or financial advice. Tax figures are seeded from
-            the sources linked on each card; rates from{' '}
+        <footer className="mt-14 grid gap-4 border-t border-line pt-6 md:grid-cols-[minmax(0,1fr)_auto]">
+          <p className="max-w-[70ch] font-mono text-[10.5px] leading-relaxed text-faint">
+            Exchange rates from{' '}
             <a
               href="https://frankfurter.dev"
               target="_blank"
               rel="noreferrer noopener"
-              className="underline underline-offset-2 hover:text-ink"
+              className="text-muted underline underline-offset-2 hover:text-ink"
             >
               Frankfurter
             </a>
             . Your scenario is in this page's URL.
+          </p>
+          <p className="max-w-[34ch] font-mono text-[10.5px] leading-relaxed text-faint md:text-right">
+            Estimates only. Not tax or financial advice. Every figure is reproducible
+            from the sources on each card — check them before you negotiate.
           </p>
         </footer>
       </div>
