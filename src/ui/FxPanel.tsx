@@ -36,8 +36,10 @@ export function FxPanel({
         Exchange rates
       </h2>
       <p className="mt-2 font-mono text-[10.5px] text-muted">
-        {fx.source} · {shortDate(fx.asOf)}
-        {!live && ' · seed values, live quote pending'}
+        {/* The seed table already names itself, so do not say it twice. */}
+        {live
+          ? `${fx.source} · ${shortDate(fx.asOf)}`
+          : `${fx.source} · live quote pending`}
       </p>
 
       <div className="mt-4 space-y-6">
