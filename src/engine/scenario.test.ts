@@ -21,6 +21,7 @@ const BASE_SCENARIO: Scenario = {
   basketOverrides: {},
   healthOverrides: {},
   fxShifts: {},
+  selectedCityIds: CITIES.map((c) => c.id),
 };
 
 const run = (overrides: Partial<Scenario> = {}) =>
