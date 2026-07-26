@@ -59,7 +59,7 @@ export function BasketEditor({
     <div className="space-y-4">
       <div className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
         <p className="eyebrow">
-          What a {entryMode === 'monthly' ? 'month' : 'year'} costs in {city.name}, in {currency}
+          What a {entryMode === 'monthly' ? 'month' : 'year'} costs
         </p>
         <div className="flex shrink-0 items-baseline gap-3">
           <div className="flex font-mono text-[11px] text-muted">
