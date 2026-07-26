@@ -132,15 +132,6 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
             </summary>
             <div className="mt-3 space-y-3 border-l border-line pl-3">
               <Field
-                label="Already saved"
-                prefix={displayCurrency}
-                value={scenario.goal.existingCapital}
-                step={5_000}
-                onChange={(existingCapital) =>
-                  onChange({ goal: { ...scenario.goal, existingCapital } })
-                }
-              />
-              <Field
                 label="Target grows"
                 suffix="% a year"
                 value={Math.round(scenario.goal.goalGrowthRate * 1000) / 10}

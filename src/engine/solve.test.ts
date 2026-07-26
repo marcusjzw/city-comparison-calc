@@ -38,16 +38,16 @@ describe('reverse solve', () => {
 });
 
 describe('years to goal', () => {
-  const goal = { target: 300_000, existingCapital: 50_000, goalGrowthRate: 0 };
+  const goal = { target: 300_000, goalGrowthRate: 0 };
 
   it('counts a flat target in whole years', () => {
-    expect(yearsToGoal(50_000, goal)).toBeCloseTo(5, 6);
+    expect(yearsToGoal(50_000, goal)).toBeCloseTo(6, 6);
   });
 
   it('returns a fractional year mid-way', () => {
-    const years = yearsToGoal(100_000, goal);
-    expect(years).toBeGreaterThan(2);
-    expect(years).toBeLessThan(3);
+    const years = yearsToGoal(90_000, goal);
+    expect(years).toBeGreaterThan(3);
+    expect(years).toBeLessThan(4);
   });
 
   it('takes longer once the target grows', () => {
@@ -62,12 +62,8 @@ describe('years to goal', () => {
     expect(yearsToGoal(-5_000, goal)).toBe(Infinity);
   });
 
-  it('is zero when the goal is already met', () => {
-    expect(yearsToGoal(50_000, { ...goal, existingCapital: 400_000 })).toBe(0);
-  });
-
   it('agrees with the closed-form surplus needed to land on a date', () => {
-    const g = { target: 300_000, existingCapital: 50_000, goalGrowthRate: 0.05 };
+    const g = { target: 300_000, goalGrowthRate: 0.05 };
     const surplus = requiredAnnualSurplus(g, 4);
     expect(yearsToGoal(surplus, g)).toBeCloseTo(4, 1);
   });

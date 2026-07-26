@@ -13,7 +13,6 @@ export const DEFAULT_SCENARIO: Scenario = {
   preTaxDeductions: 0,
   goal: {
     target: 400_000,
-    existingCapital: 60_000,
     goalGrowthRate: 0.05,
     years: 4,
   },
