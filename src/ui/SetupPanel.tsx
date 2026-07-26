@@ -68,26 +68,24 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
           hint="Salary, bonus and any equity, added together."
         />
 
-        <div className="border-l-2 border-line pl-3">
-          <Field
-            label="So you spend"
-            prefix={localCurrency}
-            value={home.spend}
-            onChange={(value) => onChange({ homeSpendOverride: value })}
-            hint={`${percent(Math.abs(home.scaleFactor - 1), 0)} ${
-              home.scaleFactor >= 1 ? 'above' : 'below'
-            } the ${home.city.name} median. Edit if it's wrong.`}
-          />
-          {!home.spendWasInferred && (
-            <button
-              type="button"
-              onClick={() => onChange({ homeSpendOverride: null })}
-              className="mt-1 font-mono text-[10.5px] text-muted underline underline-offset-2 hover:text-ink"
-            >
-              back to estimate
-            </button>
-          )}
-        </div>
+        <Field
+          label="You spend a year"
+          prefix={localCurrency}
+          value={home.spend}
+          onChange={(value) => onChange({ homeSpendOverride: value })}
+          hint={`${percent(Math.abs(home.scaleFactor - 1), 0)} ${
+            home.scaleFactor >= 1 ? 'above' : 'below'
+          } the ${home.city.name} median. Edit if it's wrong.`}
+        />
+        {!home.spendWasInferred && (
+          <button
+            type="button"
+            onClick={() => onChange({ homeSpendOverride: null })}
+            className="-mt-2 font-mono text-[10.5px] text-muted underline underline-offset-2 hover:text-ink"
+          >
+            back to estimate
+          </button>
+        )}
 
         {/* Savings is the output of pay minus spend, not a separate question.
             Showing it here is what makes "save the same" mean something
