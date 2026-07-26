@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FALLBACK_CURRENCY, isSupportedCurrency } from '../data/currencies';
 import type { Scenario } from '../engine/scenario';
 import { detectCurrencyFromEnvironment } from '../lib/detectCurrency';
@@ -101,16 +101,27 @@ function initial(): Scenario {
 
 export function useScenario() {
   const [scenario, setScenario] = useState<Scenario>(initial);
+  const syncTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    const encoded = encode(scenario);
-    try {
-      localStorage.setItem(STORAGE_KEY, encoded);
-    } catch {
-      // Private browsing. The session still works, it just will not persist.
-    }
-    // replaceState rather than a hash assignment: this must not spam history.
-    window.history.replaceState(null, '', `#s=${encoded}`);
+    /* A slider drag fires dozens of scenario updates a second. Writing the
+       URL on every one of those hits Safari's replaceState rate limit
+       ("attempt to use history.replaceState() more than 100 times per 10
+       seconds"), which throws. Debounce the sync so it settles once the
+       drag pauses, instead of on every tick. */
+    if (syncTimer.current !== null) window.clearTimeout(syncTimer.current);
+    syncTimer.current = window.setTimeout(() => {
+      const encoded = encode(scenario);
+      try {
+        localStorage.setItem(STORAGE_KEY, encoded);
+      } catch {
+        // Private browsing. The session still works, it just will not persist.
+      }
+      window.history.replaceState(null, '', `#s=${encoded}`);
+    }, 200);
+    return () => {
+      if (syncTimer.current !== null) window.clearTimeout(syncTimer.current);
+    };
   }, [scenario]);
 
   const update = useCallback((patch: Partial<Scenario>) => {
