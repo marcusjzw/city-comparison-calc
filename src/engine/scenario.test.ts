@@ -100,11 +100,21 @@ describe('goal mode', () => {
 });
 
 describe('ranking', () => {
-  it('orders by the smallest ask in home-currency terms', () => {
+  it('orders home city first, then the rest A-Z, regardless of ask', () => {
     for (const mode of ['lifestyle', 'savings', 'goal'] as Mode[]) {
       const { outcomes } = run({ mode });
-      const asks = outcomes.map((o) => o.requiredGrossHome);
-      expect(asks).toEqual([...asks].sort((a, b) => a - b));
+      expect(outcomes[0].isHome).toBe(true);
+      const rest = outcomes.slice(1).map((o) => o.city.name);
+      expect(rest).toEqual([...rest].sort((a, b) => a.localeCompare(b)));
+    }
+  });
+
+  it('order is stable across modes, unlike the requiredGrossHome ranking', () => {
+    for (const mode of ['lifestyle', 'savings', 'goal'] as Mode[]) {
+      const { outcomes } = run({ mode });
+      expect(outcomes.map((o) => o.city.id)).toEqual(
+        run({ mode: 'lifestyle' }).outcomes.map((o) => o.city.id),
+      );
     }
   });
 
