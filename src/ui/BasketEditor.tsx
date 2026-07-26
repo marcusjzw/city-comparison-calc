@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { CityOutcome } from '../engine/scenario';
 import { categorySensitivity } from '../engine/solve';
 import type { Confidence, FilingStatus } from '../engine/types';
-import { money, percent } from '../lib/format';
+import { money, percent, symbolFor } from '../lib/format';
 
 const CONFIDENCE_LABEL: Record<Confidence, string> = {
   institutional: 'institutional',
@@ -64,20 +64,27 @@ export function BasketEditor({
 
   const topImpact = sensitivity[0]?.impact ?? 1;
   const edited = Object.keys(overrides).length > 0;
+  /* These sliders price a life in {city}, so they are denominated in the city's
+     own currency — not the display currency in the masthead. The two differ for
+     most sessions, and an unlabelled number here is a silent wrong answer. */
+  const mixed = currency !== homeCurrency;
 
   return (
     <div className="space-y-4">
-      {edited && (
-        <div className="flex justify-end">
+      <div className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
+        <p className="eyebrow">
+          What a year costs in {city.name}, in {currency}
+        </p>
+        {edited && (
           <button
             type="button"
             onClick={() => onReset()}
-            className="font-mono text-[11px] text-muted underline underline-offset-2 hover:text-ink"
+            className="shrink-0 font-mono text-[11px] text-muted underline underline-offset-2 hover:text-ink"
           >
             reset all
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="space-y-3">
         {basket.map((line) => {
@@ -96,15 +103,18 @@ export function BasketEditor({
                     {CONFIDENCE_LABEL[line.confidence]}
                   </span>
                 </label>
-                <div className="flex shrink-0 items-baseline gap-1.5">
+                <div className="flex shrink-0 items-baseline gap-1">
+                  <span aria-hidden className="font-mono text-[11px] text-faint">
+                    {symbolFor(currency)}
+                  </span>
                   <input
                     type="number"
                     value={Math.round(line.annual)}
                     step={100}
                     min={0}
-                    aria-label={`${line.label} annual cost`}
+                    aria-label={`${line.label} annual cost, ${currency}`}
                     onChange={(event) => onSet(line.id, Number(event.target.value))}
-                    className="tnum w-[74px] border-b border-line bg-transparent pb-[2px] text-right font-mono text-[12px] text-ink focus:border-ink focus:outline-none"
+                    className="tnum w-[70px] border-b border-line bg-transparent pb-[2px] text-right font-mono text-[12px] text-ink focus:border-ink focus:outline-none"
                   />
                   <button
                     type="button"
@@ -167,7 +177,7 @@ export function BasketEditor({
 
       <div>
         <h4 className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">
-          Worth of a 10% change
+          Worth of a 10% change{mixed && `, back in ${homeCurrency}`}
         </h4>
         <div className="mt-2 space-y-2">
           {sensitivity.map((entry) => (
@@ -194,7 +204,7 @@ export function BasketEditor({
           ))}
         </div>
         <p className="mt-2 font-mono text-[10px] text-muted/70">
-          on annual surplus, {homeCurrency}
+          on annual surplus
         </p>
       </div>
     </div>

@@ -15,9 +15,9 @@ function baseIncome(base: TaxBase, gross: number, taxable: number): number {
     case 'taxableAfterDeduction':
       return taxable;
     case 'wages':
-      // Base plus equity is ordinary wage income in all three seeded cities.
-      // Pre-tax deductions such as 401k are not exempt from FICA, so payroll
-      // rules read gross rather than the post-deduction figure.
+      // Total comp is ordinary wage income in all three seeded cities. Pre-tax
+      // deductions such as 401k are not exempt from FICA, so payroll rules read
+      // gross rather than the post-deduction figure.
       return gross;
   }
 }
@@ -101,16 +101,6 @@ export function forward(input: ForwardInput): ForwardResult {
     effectiveTaxRate: grossComp > 0 ? totalTax / grossComp : 0,
     fxToHome: input.fxToHome,
   };
-}
-
-/** Split a gross figure into base and equity on the user's current ratio. */
-export function splitComp(
-  gross: number,
-  current: { base: number; equity: number },
-): { base: number; equity: number } {
-  const total = current.base + current.equity;
-  const equityShare = total > 0 ? current.equity / total : 0;
-  return { base: gross * (1 - equityShare), equity: gross * equityShare };
 }
 
 /** Convenience: is this record past its freshness window, or twice it. */

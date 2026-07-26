@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import { CITIES } from './data/cities';
 import { compare, type Mode } from './engine/scenario';
-import { detectCurrencyFromEnvironment } from './lib/detectCurrency';
-import { inkFor, shortDate } from './lib/format';
+import { inkFor, moneyCompact, shortDate } from './lib/format';
 import { useFx } from './state/useFx';
 import { useScenario } from './state/useScenario';
 import { CityCard, type Panel } from './ui/CityCard';
@@ -13,6 +12,7 @@ import { FxPanel } from './ui/FxPanel';
 import { Guilloche } from './ui/Guilloche';
 import { ModeSelector } from './ui/ModeSelector';
 import { SetupPanel } from './ui/SetupPanel';
+import { Step } from './ui/Step';
 
 const CURRENCIES = [...new Set(CITIES.map((city) => city.currency))];
 
@@ -21,9 +21,6 @@ export default function App() {
 
   // What the reader is shown, as opposed to what each city pays and taxes in.
   const displayCurrency = scenario.displayCurrency;
-
-  // Read once per session. Re-running it would fight the reader's own choice.
-  const [detection] = useState(detectCurrencyFromEnvironment);
 
   const { table: fx, history, live } = useFx(displayCurrency, CURRENCIES);
 
@@ -59,57 +56,56 @@ export default function App() {
 
   const stale = comparison.outcomes.filter((o) => o.freshness !== 'fresh');
 
+  // Outcomes arrive sorted by the smallest ask, so the winner is the first one.
+  const leader = comparison.outcomes[0];
+
   return (
     <div className="relative min-h-screen">
       <Guilloche className="pointer-events-none fixed inset-0 h-full w-full opacity-[0.06]" />
       <div className="rule-tricolor fixed inset-x-0 top-0 z-10" />
 
-      <div className="relative mx-auto max-w-[1360px] px-6 py-12 lg:px-10">
-        <header className="border-b border-line pb-7">
-          {/* The currency control rides the eyebrow line rather than sitting
-              beside the masthead: it is a setting, not a headline, and this
-              keeps the title, standfirst and reading order untouched. */}
-          <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-            <p className="eyebrow">Salary, converted · three cities</p>
-            <CurrencySelector
-              value={displayCurrency}
-              detection={detection}
-              live={live}
-              onChange={(currency) => update({ displayCurrency: currency })}
-            />
+      <div className="relative mx-auto max-w-[1360px] px-6 pt-6 pb-10 lg:px-10">
+        {/* One masthead row. The title, its one-line standfirst and the currency
+            control share a baseline instead of stacking into a third of the
+            screen, because the flow diagram below is the thing worth the space. */}
+        <header className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 border-b border-line pb-4">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <h1 className="font-display text-[34px] leading-none text-ink">
+              Roundtrip
+            </h1>
+            <p className="font-sans text-[13.5px] leading-snug text-muted">
+              What salary you need over there — and what it's worth back home.
+            </p>
           </div>
-          <h1 className="mt-3 font-display text-[52px] leading-[0.95] text-ink">
-            Roundtrip
-          </h1>
-          <p className="mt-3 max-w-[52ch] font-sans text-[15px] leading-relaxed text-muted">
-            What salary do I need over there, and what does it actually get me back
-            home? Set your situation on the left, pick what you are optimising for,
-            and read it off the cards.
-          </p>
+          <CurrencySelector
+            value={displayCurrency}
+            live={live}
+            onChange={(currency) => update({ displayCurrency: currency })}
+          />
         </header>
 
         {stale.length > 0 && (
-          <div className="mt-4 border-l-2 border-ink bg-plate/60 px-4 py-3">
-            <p className="font-mono text-[11.5px] text-ink">
+          <div className="mt-3 border-l-2 border-ink bg-plate/60 px-3 py-2">
+            <p className="font-mono text-[11px] text-ink">
+              Rates last checked:{' '}
               {stale
-                .map(
-                  (o) =>
-                    `${o.city.name} rates last checked ${shortDate(o.city.asOf)} (${o.freshness})`,
-                )
+                .map((o) => `${o.city.name} ${shortDate(o.city.asOf)}`)
                 .join(' · ')}
             </p>
           </div>
         )}
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="space-y-8">
-            <SetupPanel
-              scenario={scenario}
-              comparison={comparison}
-              cities={CITIES}
-              mode={scenario.mode}
-              onChange={update}
-            />
+        <div className="mt-6 grid gap-x-10 gap-y-8 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="space-y-7">
+            <Step n={1} title="Tell us where you are" hint="Your pay and savings today.">
+              <SetupPanel
+                scenario={scenario}
+                comparison={comparison}
+                cities={CITIES}
+                mode={scenario.mode}
+                onChange={update}
+              />
+            </Step>
             {/* FX is a power feature: consequential for a repatriating saver, but
                 not something to put in a newcomer's face. It waits behind an
                 expander until asked for. */}
@@ -118,7 +114,7 @@ export default function App() {
                 <span className="font-mono text-[13px] text-faint transition-transform group-open:rotate-90">
                   ›
                 </span>
-                <span className="eyebrow">Advanced · exchange-rate assumptions</span>
+                <span className="eyebrow">Exchange rates</span>
               </summary>
               <div className="mt-4">
                 <FxPanel
@@ -133,98 +129,16 @@ export default function App() {
                 />
               </div>
             </details>
-          </aside>
 
-          <main className="min-w-0 space-y-8">
-            <ModeSelector
-              mode={scenario.mode}
-              onChange={(mode: Mode) => update({ mode })}
-            />
-
-            {/* The answer comes first: three cities, ranked by the smallest
-                salary you'd have to ask for. The flow ribbon is the detail and
-                sits below, so a newcomer reads the result before the chart. */}
-            <section aria-label="City comparison">
-              <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-                <p className="eyebrow">The ask, ranked · smallest first</p>
-                <p className="font-mono text-[11px] text-faint">
-                  each shows the gross comp you'd negotiate for
-                </p>
-              </div>
-              <div className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {comparison.outcomes.map((outcome, index) => (
-                  <CityCard
-                    key={outcome.city.id}
-                    outcome={outcome}
-                    scenario={scenario}
-                    homeCurrency={displayCurrency}
-                    rank={index + 1}
-                    leader={index === 0}
-                    focused={outcome.city.id === focused.city.id}
-                    openPanel={panels[outcome.city.id] ?? null}
-                    onFocus={() => setFocusedId(outcome.city.id)}
-                    onTogglePanel={(panel) =>
-                      setPanels((current) => ({
-                        ...current,
-                        [outcome.city.id]:
-                          current[outcome.city.id] === panel ? null : panel,
-                      }))
-                    }
-                    onSetBasket={setBasket}
-                    onResetBasket={resetBasket}
-                  />
-                ))}
-              </div>
-            </section>
-
-            <section
-              aria-label={`Where ${focused.city.name} money goes`}
-              className="border-t border-line pt-6"
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <div>
-                  <p className="eyebrow">Where the money goes</p>
-                  <div className="mt-1.5 flex items-baseline gap-2.5">
-                    <span
-                      aria-hidden
-                      className="inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ background: inkFor(focused.city.currency) }}
-                    />
-                    <h2 className="font-display text-[20px] text-ink">
-                      {focused.city.name}
-                    </h2>
-                  </div>
-                </div>
-                <p className="font-mono text-[11px] text-faint">
-                  selected card · click another to switch
-                </p>
-              </div>
-
-              {/* A one-line reading key so the ribbon isn't a mystery chart. */}
-              <p className="mt-2 max-w-[70ch] font-sans text-[12.5px] leading-relaxed text-muted">
-                Gross pay enters from the left and splits into{' '}
-                <span className="text-ink">tax</span> and{' '}
-                <span className="text-ink">living cost</span>; what's left — your{' '}
-                <span style={{ color: inkFor(focused.city.currency) }}>surplus</span> —
-                crosses the horizon, converts to {displayCurrency}, and fills the{' '}
-                <span style={{ color: inkFor(displayCurrency) }}>reservoir</span> toward
-                your goal line.
-              </p>
-
-              <FlowRibbon
-                outcome={focused}
-                goal={scenario.goal}
-                homeCurrency={displayCurrency}
-                countRetirement={scenario.countRetirement}
-              />
-            </section>
-
+            {/* Caveats sit in the sidebar with the other reference material,
+                which also stops the left column running dry a full screen
+                before the right one does. */}
             {comparison.outcomes.some((o) => o.city.notes?.length) && (
               <Disclosure
-                summary="Assumptions & limits — what this model does and does not do"
-                className="border-t border-line pt-5"
+                summary="Assumptions & limits"
+                className="border-t border-line pt-4"
               >
-                <ul className="grid gap-5 md:grid-cols-3">
+                <ul className="space-y-4">
                   {comparison.outcomes.map((outcome) => (
                     <li key={outcome.city.id}>
                       <p
@@ -233,7 +147,7 @@ export default function App() {
                       >
                         {outcome.city.name}
                       </p>
-                      <ul className="mt-2 space-y-1.5">
+                      <ul className="mt-1.5 space-y-1.5">
                         {(outcome.city.notes ?? []).map((note) => (
                           <li
                             key={note}
@@ -248,12 +162,153 @@ export default function App() {
                 </ul>
               </Disclosure>
             )}
+          </aside>
+
+          <main className="min-w-0 space-y-7">
+            <Step n={2} title="Pick what matters">
+              <ModeSelector
+                mode={scenario.mode}
+                onChange={(mode: Mode) => update({ mode })}
+              />
+            </Step>
+
+            {/* Answer, then evidence, then comparison. The sentence carries the
+                number, the ribbon shows how that number survives tax, rent and
+                the exchange rate, and the cards are where you go to argue with
+                it. The ribbon sits above the cards because it is the thing
+                worth looking at first, not a footnote to them. */}
+            <Step n={3} title="Here's what to ask for">
+              {/* Say the answer in a sentence before drawing anything.
+                  A first-timer should not have to infer the ordering. */}
+              {leader && (
+                <p className="max-w-[64ch] font-sans text-[14px] leading-relaxed text-ink">
+                  {Number.isFinite(leader.requiredGross) ? (
+                    <>
+                      <span style={{ color: inkFor(leader.city.currency) }}>
+                        {leader.city.name}
+                      </span>{' '}
+                      asks least: about{' '}
+                      <span className="font-mono">
+                        {moneyCompact(leader.requiredGross, leader.city.currency)}
+                      </span>{' '}
+                      a year, before tax.
+                    </>
+                  ) : (
+                    <>No city clears this bar yet. Try a longer timeline or a
+                    smaller target in step 1.</>
+                  )}
+                </p>
+              )}
+
+              <section
+                aria-label={`Where ${focused.city.name} money goes`}
+                className="mt-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  {/* The ribbon draws one city, so it carries its own city
+                      switch rather than depending on a card further down the
+                      page that you may not have scrolled to yet. */}
+                  <div
+                    role="tablist"
+                    aria-label="City shown in the flow diagram"
+                    className="flex flex-wrap gap-1"
+                  >
+                    {comparison.outcomes.map((outcome) => {
+                      const selected = outcome.city.id === focused.city.id;
+                      const cityInk = inkFor(outcome.city.currency);
+                      return (
+                        <button
+                          key={outcome.city.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={selected}
+                          onClick={() => setFocusedId(outcome.city.id)}
+                          className={`flex items-center gap-1.5 rounded border px-2.5 py-1 font-mono text-[11.5px] transition-colors ${
+                            selected
+                              ? 'border-line bg-plate text-ink'
+                              : 'border-transparent text-muted hover:text-ink'
+                          }`}
+                        >
+                          <span
+                            aria-hidden
+                            className="inline-block h-2 w-2 rounded-full"
+                            style={{
+                              background: cityInk,
+                              opacity: selected ? 1 : 0.4,
+                            }}
+                          />
+                          {outcome.city.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* A one-line reading key so the ribbon isn't a mystery chart. */}
+                  <p className="font-sans text-[12px] leading-snug text-muted">
+                    Pay in from the left; <span className="text-ink">tax</span> and{' '}
+                    <span className="text-ink">living cost</span> peel off, the{' '}
+                    <span style={{ color: inkFor(focused.city.currency) }}>
+                      surplus
+                    </span>{' '}
+                    converts to {displayCurrency}.
+                  </p>
+                </div>
+
+                <FlowRibbon
+                  outcome={focused}
+                  goal={scenario.goal}
+                  homeCurrency={displayCurrency}
+                  countRetirement={scenario.countRetirement}
+                />
+              </section>
+
+              <p className="eyebrow mt-5 mb-2.5">
+                All three, cheapest ask first
+              </p>
+              <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {comparison.outcomes.map((outcome, index) => (
+                  <CityCard
+                    key={outcome.city.id}
+                    outcome={outcome}
+                    scenario={scenario}
+                    homeCurrency={displayCurrency}
+                    leader={index === 0}
+                    behindLeader={
+                      index === 0 ||
+                      !leader ||
+                      !Number.isFinite(outcome.requiredGrossHome) ||
+                      !Number.isFinite(leader.requiredGrossHome)
+                        ? null
+                        : {
+                            name: leader.city.name,
+                            extraHome:
+                              outcome.requiredGrossHome - leader.requiredGrossHome,
+                          }
+                    }
+                    focused={outcome.city.id === focused.city.id}
+                    openPanel={panels[outcome.city.id] ?? null}
+                    onFocus={() => setFocusedId(outcome.city.id)}
+                    onTogglePanel={(panel) =>
+                      setPanels((current) => ({
+                        ...current,
+                        [outcome.city.id]:
+                          current[outcome.city.id] === panel ? null : panel,
+                      }))
+                    }
+                    onSetBasket={setBasket}
+                    onResetBasket={resetBasket}
+                    onFilingStatus={(filingStatus) => update({ filingStatus })}
+                  />
+                ))}
+              </div>
+            </Step>
+
           </main>
         </div>
 
         <footer className="mt-14 grid gap-4 border-t border-line pt-6 md:grid-cols-[minmax(0,1fr)_auto]">
-          <p className="max-w-[70ch] font-mono text-[10.5px] leading-relaxed text-faint">
-            Exchange rates from{' '}
+          <p className="font-mono text-[10.5px] leading-relaxed text-faint">
+            Rates from{' '}
             <a
               href="https://frankfurter.dev"
               target="_blank"
@@ -262,11 +317,10 @@ export default function App() {
             >
               Frankfurter
             </a>
-            . Your scenario is in this page's URL.
+            . Your scenario is saved in this page's URL — copy it to share.
           </p>
-          <p className="max-w-[34ch] font-mono text-[10.5px] leading-relaxed text-faint md:text-right">
-            Estimates only. Not tax or financial advice. Every figure is reproducible
-            from the sources on each card — check them before you negotiate.
+          <p className="font-mono text-[10.5px] leading-relaxed text-faint md:text-right">
+            Estimates, not advice. Check the sources on each card.
           </p>
         </footer>
       </div>

@@ -29,11 +29,10 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
   const localCurrency = home.city.currency;
   const displayCurrency = scenario.displayCurrency;
   const mixedCurrencies = localCurrency !== displayCurrency;
-  const supportsFiling = cities.some((city) => city.filingStatuses?.length);
 
   return (
     <div className="space-y-5">
-      <Section title="Where you are now">
+      <div className="space-y-3">
         <div className="flex items-baseline justify-between gap-3">
           <label htmlFor="home-city" className="font-sans text-[12px] text-muted">
             Home city
@@ -54,25 +53,20 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
 
         {mixedCurrencies && (
           <p className="font-sans text-[10.5px] leading-relaxed text-muted/80">
-            These are in {localCurrency}, what {home.city.name} taxes you in.
-            Comparisons are in {displayCurrency}.
+            Enter these in {localCurrency}. Comparisons come back in{' '}
+            {displayCurrency}.
           </p>
         )}
 
         <Field
-          label="Base salary"
+          label="Total pay a year"
           prefix={localCurrency}
-          value={scenario.current.base}
-          onChange={(base) => onChange({ current: { ...scenario.current, base } })}
+          value={scenario.current.comp}
+          onChange={(comp) => onChange({ current: { ...scenario.current, comp } })}
+          hint="Salary, bonus and any equity, added together."
         />
         <Field
-          label="Equity, annualised"
-          prefix={localCurrency}
-          value={scenario.current.equity}
-          onChange={(equity) => onChange({ current: { ...scenario.current, equity } })}
-        />
-        <Field
-          label="Annual savings"
+          label="You save a year"
           prefix={localCurrency}
           value={scenario.current.annualSavings}
           onChange={(annualSavings) =>
@@ -86,9 +80,9 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
             prefix={localCurrency}
             value={home.spend}
             onChange={(value) => onChange({ homeSpendOverride: value })}
-            hint={`${percent(home.scaleFactor - 1, 0)} ${
+            hint={`${percent(Math.abs(home.scaleFactor - 1), 0)} ${
               home.scaleFactor >= 1 ? 'above' : 'below'
-            } the ${home.city.name} median. Every city is priced at that multiple.`}
+            } the ${home.city.name} median. Edit if it's wrong.`}
           />
           {!home.spendWasInferred && (
             <button
@@ -96,36 +90,15 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
               onClick={() => onChange({ homeSpendOverride: null })}
               className="mt-1 font-mono text-[10.5px] text-muted underline underline-offset-2 hover:text-ink"
             >
-              use inferred
+              back to estimate
             </button>
           )}
         </div>
 
-        {supportsFiling && (
-          <div className="flex items-baseline justify-between gap-3">
-            <label htmlFor="filing" className="font-sans text-[12px] text-muted">
-              US filing status
-            </label>
-            <select
-              id="filing"
-              value={scenario.filingStatus}
-              onChange={(event) =>
-                onChange({
-                  filingStatus: event.target.value as Scenario['filingStatus'],
-                })
-              }
-              className="border-b border-line bg-transparent pb-[2px] text-right font-mono text-[13px] text-ink focus:border-ink focus:outline-none"
-            >
-              <option value="single" className="bg-plate">
-                Single
-              </option>
-              <option value="married_joint" className="bg-plate">
-                Married, filing jointly
-              </option>
-            </select>
-          </div>
-        )}
-      </Section>
+        {/* US filing status used to live here, where it read as a question
+            everyone had to answer. It only changes one city's tax, so it now
+            sits on that city's card. */}
+      </div>
 
       {/* The goal only exists in Goal mode — the other two modes answer a
           different question, so surfacing "what you're saving for" there is
@@ -139,7 +112,6 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
             value={scenario.goal.target}
             step={10_000}
             onChange={(target) => onChange({ goal: { ...scenario.goal, target } })}
-            hint={`The ${displayCurrency} number you want to walk away with.`}
           />
           <Field
             label="By when"
@@ -176,13 +148,13 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
                 onChange={(value) =>
                   onChange({ goal: { ...scenario.goal, goalGrowthRate: value / 100 } })
                 }
-                hint="How fast the thing you're saving for gets more expensive."
+                hint="How fast the thing you're saving for gets pricier."
               />
               <Toggle
                 label="Count retirement toward it"
                 checked={scenario.countRetirement}
                 onChange={(countRetirement) => onChange({ countRetirement })}
-                hint="Super and the like are real money, but not money you can put into a deposit."
+                hint="Super and 401(k) are real money — but not deposit money."
               />
             </div>
           </details>
