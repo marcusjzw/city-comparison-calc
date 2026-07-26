@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { CITIES } from '../data/cities';
 import { SEED_FX } from '../data/fx';
+import { medianAnnual } from './basket';
 import { compare, type Mode, type Scenario } from './scenario';
 
 const BASE_SCENARIO: Scenario = {
   homeCityId: 'sydney',
   displayCurrency: 'AUD',
-  current: { comp: 311_500, annualSavings: 100_000 },
+  current: { comp: 311_500 },
   homeSpendOverride: null,
   filingStatus: 'married_joint',
   preTaxDeductions: 0,
@@ -29,12 +30,11 @@ const outcome = (mode: Mode, id: string) =>
   run({ mode }).outcomes.find((o) => o.city.id === id)!;
 
 describe('home snapshot', () => {
-  it('infers living cost from net income less savings', () => {
+  it('infers living cost from the home city median, not an asked-for savings figure', () => {
     const { home } = run();
+    const sydney = CITIES.find((c) => c.id === 'sydney')!;
     expect(home.spendWasInferred).toBe(true);
-    expect(home.spend).toBeCloseTo(home.result.netIncome - 100_000, 6);
-    expect(home.spend).toBeGreaterThan(98_000);
-    expect(home.spend).toBeLessThan(100_000);
+    expect(home.spend).toBeCloseTo(medianAnnual(sydney), 6);
   });
 
   it('takes a correction over the inference', () => {
