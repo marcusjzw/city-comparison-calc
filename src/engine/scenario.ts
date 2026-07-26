@@ -1,7 +1,6 @@
 import {
   basketTotal,
   buildBasket,
-  deriveLivingCost,
   lifestyleParitySurplusLocal,
   medianAnnual,
   scaleFactorFor,
@@ -37,7 +36,7 @@ export interface Scenario {
    * splitting them changed nothing in the answer and asked the reader for a
    * number most of them do not have.
    */
-  current: { comp: number; annualSavings: number };
+  current: { comp: number };
   /** Overrides the inferred home spend when the user corrects it. */
   homeSpendOverride: number | null;
   filingStatus: FilingStatus;
@@ -112,20 +111,9 @@ export function compare(
   const homeFx = fxFor(fx, homeCity, scenario.fxShifts);
   const homeHealth = scenario.healthOverrides[homeCity.id] ?? homeCity.healthAnnualCost;
 
-  // One pass to get net income, since the inferred spend depends on it.
-  const homeNet = forward({
-    city: homeCity,
-    grossComp: homeGross,
-    filingStatus: scenario.filingStatus,
-    preTaxDeductions: scenario.preTaxDeductions,
-    livingCost: 0,
-    healthCost: homeHealth,
-    fxToHome: homeFx,
-  }).netIncome;
-
-  const spend =
-    scenario.homeSpendOverride ??
-    deriveLivingCost(homeNet, scenario.current.annualSavings);
+  // Living cost defaults to the home city's own median basket — a typical
+  // spender, not a guess built from a savings figure nobody was asked for.
+  const spend = scenario.homeSpendOverride ?? medianAnnual(homeCity);
 
   const homeResult = forward({
     city: homeCity,

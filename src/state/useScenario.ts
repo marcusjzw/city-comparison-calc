@@ -7,7 +7,7 @@ import { detectCurrencyFromEnvironment } from '../lib/detectCurrency';
 export const DEFAULT_SCENARIO: Scenario = {
   homeCityId: 'sydney',
   displayCurrency: FALLBACK_CURRENCY,
-  current: { comp: 311_500, annualSavings: 100_000 },
+  current: { comp: 311_500 },
   homeSpendOverride: null,
   filingStatus: 'married_joint',
   preTaxDeductions: 0,
@@ -46,24 +46,26 @@ function resolveCurrency(stored: unknown): string {
 }
 
 /**
- * Links minted before comp was a single figure carry `{ base, equity }`. They
- * are out in the world already, so they get folded into the one number rather
- * than silently falling back to the default salary.
+ * Links minted before comp was a single figure carry `{ base, equity }`, and
+ * links minted before savings was dropped as an input carry a now-unused
+ * `annualSavings`. Both are out in the world already: the comp half gets
+ * folded into the one number rather than silently falling back to the
+ * default salary, and the savings half is simply ignored.
  */
-type LegacyComp = Partial<Scenario['current']> & { base?: number; equity?: number };
+type LegacyComp = Partial<Scenario['current']> & {
+  base?: number;
+  equity?: number;
+  annualSavings?: number;
+};
 
 export function resolveComp(stored: unknown): Scenario['current'] {
   if (!stored || typeof stored !== 'object') return DEFAULT_SCENARIO.current;
   const legacy = stored as LegacyComp;
-  const annualSavings =
-    typeof legacy.annualSavings === 'number'
-      ? legacy.annualSavings
-      : DEFAULT_SCENARIO.current.annualSavings;
-  if (typeof legacy.comp === 'number') return { comp: legacy.comp, annualSavings };
+  if (typeof legacy.comp === 'number') return { comp: legacy.comp };
   if (typeof legacy.base === 'number' || typeof legacy.equity === 'number') {
-    return { comp: (legacy.base ?? 0) + (legacy.equity ?? 0), annualSavings };
+    return { comp: (legacy.base ?? 0) + (legacy.equity ?? 0) };
   }
-  return { ...DEFAULT_SCENARIO.current, annualSavings };
+  return DEFAULT_SCENARIO.current;
 }
 
 function decode(raw: string): Scenario | null {

@@ -103,7 +103,7 @@ export default function App() {
 
         <div className="mt-6 grid gap-x-10 gap-y-8 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="space-y-7">
-            <Step n={1} title="Tell us where you are" hint="Your pay and savings today.">
+            <Step n={1} title="Tell us where you are" hint="Your pay, and what you spend.">
               <SetupPanel
                 scenario={scenario}
                 comparison={comparison}
@@ -183,7 +183,11 @@ export default function App() {
                 the exchange rate, and the cards are where you go to argue with
                 it. The ribbon sits above the cards because it is the thing
                 worth looking at first, not a footnote to them. */}
-            <Step n={3} title="Here's what to ask for">
+            <Step
+              n={3}
+              title="The salary to ask for"
+              hint="What you'd need to negotiate, per city, before tax."
+            >
               {/* Say the answer in a sentence before drawing anything.
                   A first-timer should not have to infer the ordering. */}
               {leader && (
@@ -269,7 +273,7 @@ export default function App() {
               </section>
 
               <p className="eyebrow mt-5 mb-2.5">
-                All three, cheapest ask first
+                All three cities, lowest salary first
               </p>
               <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {comparison.outcomes.map((outcome, index) => (

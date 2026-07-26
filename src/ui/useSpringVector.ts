@@ -55,7 +55,7 @@ export function useSpringVector(
       const displacement = position[i] - goal[i];
       velocity[i] += (-stiffness * displacement - c * velocity[i]) * dt;
       position[i] += velocity[i] * dt;
-      if (Math.abs(position[i] - goal[i]) > 1e-4 || Math.abs(velocity[i]) > 1e-4) {
+      if (Math.abs(position[i] - goal[i]) > 1e-3 || Math.abs(velocity[i]) > 1e-3) {
         moving = true;
       } else {
         position[i] = goal[i];

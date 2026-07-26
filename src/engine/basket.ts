@@ -53,15 +53,6 @@ export function basketTotal(basket: Basket): number {
   return basket.reduce((t, line) => t + line.annual, 0);
 }
 
-/**
- * People know what they save far better than they know what they spend, so
- * living cost is inferred rather than asked for. The UI shows the derived
- * figure and lets them correct it.
- */
-export function deriveLivingCost(netIncome: number, annualSavings: number): number {
-  return Math.max(0, netIncome - annualSavings);
-}
-
 /** The scale factor implied by a user's actual spend in their home city. */
 export function scaleFactorFor(homeCity: CityData, annualSpend: number): number {
   const median = medianAnnual(homeCity);

@@ -1,6 +1,6 @@
 import type { Comparison, Mode, Scenario } from '../engine/scenario';
 import type { CityData } from '../engine/types';
-import { percent } from '../lib/format';
+import { money, percent } from '../lib/format';
 import { Field, Section, Toggle } from './Field';
 
 interface Props {
@@ -14,9 +14,11 @@ interface Props {
 /**
  * Setup stays minimal on purpose.
  *
- * Living costs are inferred from net income less savings rather than asked
- * for, because people know what they save far better than they know what they
- * spend. The derived figure is shown and can be corrected.
+ * Salary is the only thing asked for. Living cost defaults to the home
+ * city's own median — a typical spender — rather than a savings figure
+ * nobody was asked to produce; what's left over is shown as the derived
+ * result, not collected as an input. The spend figure can still be
+ * corrected if the median guess is off.
  *
  * Two currencies are in play here and the distinction is load-bearing. What
  * you earn and spend today is in your home city's currency, because that is
@@ -65,14 +67,6 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
           onChange={(comp) => onChange({ current: { ...scenario.current, comp } })}
           hint="Salary, bonus and any equity, added together."
         />
-        <Field
-          label="You save a year"
-          prefix={localCurrency}
-          value={scenario.current.annualSavings}
-          onChange={(annualSavings) =>
-            onChange({ current: { ...scenario.current, annualSavings } })
-          }
-        />
 
         <div className="border-l-2 border-line pl-3">
           <Field
@@ -94,6 +88,17 @@ export function SetupPanel({ scenario, comparison, cities, mode, onChange }: Pro
             </button>
           )}
         </div>
+
+        {/* Savings is the output of pay minus spend, not a separate question.
+            Showing it here is what makes "save the same" mean something
+            concrete before the reader ever picks that mode. */}
+        <p className="font-sans text-[12px] leading-relaxed text-muted">
+          That leaves{' '}
+          <span className="tnum font-mono text-ink">
+            {money(home.surplusHome, displayCurrency)}
+          </span>{' '}
+          a year to save.
+        </p>
 
         {/* US filing status used to live here, where it read as a question
             everyone had to answer. It only changes one city's tax, so it now
