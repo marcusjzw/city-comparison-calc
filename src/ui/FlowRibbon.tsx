@@ -43,11 +43,11 @@ interface StreamSpec {
  * for — gets the city's ink.
  */
 const STREAMS: StreamSpec[] = [
-  { key: 'incomeTax', label: 'Income tax', colour: '#3c525c' },
-  { key: 'levies', label: 'Levies', colour: '#35474f' },
-  { key: 'payrollTax', label: 'Payroll', colour: '#2e3f47' },
-  { key: 'health', label: 'Health', colour: '#476069' },
-  { key: 'living', label: 'Living cost', colour: '#5c7d89' },
+  { key: 'incomeTax', label: 'Income tax', colour: 'var(--stream-1)' },
+  { key: 'levies', label: 'Levies', colour: 'var(--stream-2)' },
+  { key: 'payrollTax', label: 'Payroll', colour: 'var(--stream-3)' },
+  { key: 'health', label: 'Health', colour: 'var(--stream-4)' },
+  { key: 'living', label: 'Living cost', colour: 'var(--stream-5)' },
   { key: 'surplus', label: 'Surplus', colour: 'ink' },
 ];
 

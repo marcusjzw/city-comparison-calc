@@ -4,6 +4,7 @@ import { compare, type Mode } from './engine/scenario';
 import { inkFor, moneyCompact, shortDate } from './lib/format';
 import { useFx } from './state/useFx';
 import { useScenario } from './state/useScenario';
+import { useTheme } from './state/useTheme';
 import { CityCard, type Panel } from './ui/CityCard';
 import { CurrencySelector } from './ui/CurrencySelector';
 import { Disclosure } from './ui/Disclosure';
@@ -13,11 +14,13 @@ import { Guilloche } from './ui/Guilloche';
 import { ModeSelector } from './ui/ModeSelector';
 import { SetupPanel } from './ui/SetupPanel';
 import { Step } from './ui/Step';
+import { ThemeToggle } from './ui/ThemeToggle';
 
 const CURRENCIES = [...new Set(CITIES.map((city) => city.currency))];
 
 export default function App() {
   const { scenario, update } = useScenario();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   // What the reader is shown, as opposed to what each city pays and taxes in.
   const displayCurrency = scenario.displayCurrency;
@@ -77,11 +80,14 @@ export default function App() {
               What salary you need over there — and what it's worth back home.
             </p>
           </div>
-          <CurrencySelector
-            value={displayCurrency}
-            live={live}
-            onChange={(currency) => update({ displayCurrency: currency })}
-          />
+          <div className="flex items-end gap-4">
+            <CurrencySelector
+              value={displayCurrency}
+              live={live}
+              onChange={(currency) => update({ displayCurrency: currency })}
+            />
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          </div>
         </header>
 
         {stale.length > 0 && (

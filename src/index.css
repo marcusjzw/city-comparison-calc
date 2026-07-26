@@ -8,23 +8,33 @@
  * colour, and each city keeps its ink across every card, chart and number.
  */
 @theme {
-  --color-ground: #0b1216;
-  --color-plate: #17242b;
-  --color-line: #24363e;
-  --color-ink: #eef4f6;
-  /* Secondary text. Bright enough to actually read as content. */
-  --color-muted: #9fb4bc;
+  --color-ground: #efe8d8;
+  --color-plate: #fbf7ee;
+  --color-line: #ddd2b8;
+  --color-ink: #171310;
+  /* Secondary text. Dark enough to actually read as content. */
+  --color-muted: #5b6a70;
   /* Tertiary: labels, unit prefixes, provenance. Deliberately quiet so the
    * numbers can be the loud thing. Hierarchy is carried by contrast, not size. */
-  --color-faint: #647d88;
+  --color-faint: #8b9096;
 
   --font-display: 'Bodoni Moda', 'Times New Roman', serif;
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
 }
 
+/*
+ * Light and dark are two plates struck from the same die: same tokens, same
+ * currency-ink identities, different contrast direction. Light is the
+ * default — an unclassed <html> gets it for free — and `.dark` (toggled by
+ * useTheme, applied before first paint by the inline script in index.html so
+ * a returning dark-mode reader never sees a flash of the other plate) swaps
+ * every token at once. Everything downstream reads the tokens, never a raw
+ * hex, so the swap is total.
+ */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+
   /*
    * Currency inks. Assigned by currency, so a new city inherits one for free.
    *
@@ -33,10 +43,13 @@
    * USD orange — green and orange are the classic confusable pair. Every place
    * these carry meaning (ribbon streams, reservoir, hero numbers) also carries
    * a text label or currency symbol, so hue is never the only signal.
+   *
+   * Light mode darkens each one against the same hue rather than hand-tuning
+   * a second palette, so a currency's identity survives the swap.
    */
-  --ink-AUD: #3fc2a4;
-  --ink-SGD: #6a9ce0;
-  --ink-USD: #e2984a;
+  --ink-AUD: color-mix(in oklch, #3fc2a4 58%, black);
+  --ink-SGD: color-mix(in oklch, #6a9ce0 58%, black);
+  --ink-USD: color-mix(in oklch, #e2984a 58%, black);
 
   /*
    * The three above belong to the seeded cities and carry the cards, charts
@@ -47,6 +60,55 @@
    * a reader has to tell apart. Pitched at the same brightness as the three
    * above so a GBP or JPY session looks like the same product.
    */
+  --ink-EUR: color-mix(in oklch, #7f8fe4 58%, black);
+  --ink-GBP: color-mix(in oklch, #c07fd4 58%, black);
+  --ink-CAD: color-mix(in oklch, #e2737b 58%, black);
+  --ink-CHF: color-mix(in oklch, #db6360 58%, black);
+  --ink-JPY: color-mix(in oklch, #e4808f 58%, black);
+  --ink-HKD: color-mix(in oklch, #d99a63 58%, black);
+  --ink-NZD: color-mix(in oklch, #4fb8c0 58%, black);
+  --ink-INR: color-mix(in oklch, #e99f5a 58%, black);
+  --ink-CNY: color-mix(in oklch, #df7a62 58%, black);
+  --ink-KRW: color-mix(in oklch, #8f9ee6 58%, black);
+  --ink-SEK: color-mix(in oklch, #68b0d4 58%, black);
+  --ink-NOK: color-mix(in oklch, #6f9ed2 58%, black);
+  --ink-DKK: color-mix(in oklch, #c8787f 58%, black);
+  --ink-PLN: color-mix(in oklch, #b98fd0 58%, black);
+  --ink-ILS: color-mix(in oklch, #7bb4df 58%, black);
+  --ink-BRL: color-mix(in oklch, #73bd7a 58%, black);
+  --ink-MXN: color-mix(in oklch, #9fba62 58%, black);
+
+  --ink-default: var(--color-muted);
+
+  /* The lamp glow behind the plate. Warm and barely-there against paper. */
+  --glow-1: #fffdf6;
+  --glow-2: #f9f2df;
+  /* The sheen a card catches versus the shadow it casts, per plate. */
+  --plate-sheen: rgba(0, 0, 0, 0.025);
+  --plate-alpha: 82%;
+
+  /* Flow-ribbon deduction bands: plate greys, darkest to lightest, so the
+   * currency inks stay the only colour on the page. */
+  --stream-1: #b7ab8e;
+  --stream-2: #c2b79c;
+  --stream-3: #ccc2aa;
+  --stream-4: #a99c7c;
+  --stream-5: #9c8f6f;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --color-ground: #0b1216;
+  --color-plate: #17242b;
+  --color-line: #24363e;
+  --color-ink: #eef4f6;
+  --color-muted: #9fb4bc;
+  --color-faint: #647d88;
+
+  --ink-AUD: #3fc2a4;
+  --ink-SGD: #6a9ce0;
+  --ink-USD: #e2984a;
   --ink-EUR: #7f8fe4;
   --ink-GBP: #c07fd4;
   --ink-CAD: #e2737b;
@@ -66,6 +128,35 @@
   --ink-MXN: #9fba62;
 
   --ink-default: #9fb4bc;
+
+  --glow-1: #1a2a32;
+  --glow-2: #14232a;
+  --plate-sheen: rgba(255, 255, 255, 0.03);
+  --plate-alpha: 56%;
+
+  --stream-1: #3c525c;
+  --stream-2: #35474f;
+  --stream-3: #2e3f47;
+  --stream-4: #476069;
+  --stream-5: #5c7d89;
+}
+
+/*
+ * Every colour swap above happens on these properties, gradually rather than
+ * as a hard cut. Scoped to the base layer so Tailwind's own utilities (the
+ * snappy 150ms `transition-colors` on buttons and tabs) still win where they
+ * apply — this only fills in the elements that don't already animate.
+ */
+@layer base {
+  * {
+    transition:
+      background-color 700ms cubic-bezier(0.65, 0, 0.35, 1),
+      border-color 700ms cubic-bezier(0.65, 0, 0.35, 1),
+      color 700ms cubic-bezier(0.65, 0, 0.35, 1),
+      fill 700ms cubic-bezier(0.65, 0, 0.35, 1),
+      stroke 700ms cubic-bezier(0.65, 0, 0.35, 1),
+      box-shadow 700ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
 }
 
 html {
@@ -83,9 +174,9 @@ body {
    * lamp, so the surface reads as pressed paper rather than a dead grey panel.
    */
   background:
-    radial-gradient(120% 80% at 18% -10%, #1a2a32 0%, rgba(26, 42, 50, 0) 55%),
-    radial-gradient(90% 90% at 100% 0%, #14232a 0%, rgba(20, 35, 42, 0) 45%),
-    #0b1216;
+    radial-gradient(120% 80% at 18% -10%, var(--glow-1) 0%, transparent 55%),
+    radial-gradient(90% 90% at 100% 0%, var(--glow-2) 0%, transparent 45%),
+    var(--color-ground);
   background-attachment: fixed;
 }
 
@@ -122,8 +213,8 @@ body {
  * it lifts off the ground instead of dissolving into it. */
 .plate-card {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 40%),
-    #14212890;
+    linear-gradient(180deg, var(--plate-sheen) 0%, transparent 40%),
+    color-mix(in srgb, var(--color-plate) var(--plate-alpha), transparent);
   backdrop-filter: blur(2px);
 }
 
