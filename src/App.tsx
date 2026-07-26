@@ -35,8 +35,21 @@ export default function App() {
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [panels, setPanels] = useState<Record<string, Panel | null>>({});
 
+  // Cards render in a fixed order (home first, then A-Z) so dragging a slider
+  // never reshuffles them. The leader — the smallest ask — is found by value
+  // instead, independent of that display order.
+  const leader = comparison.outcomes.reduce<
+    (typeof comparison.outcomes)[number] | undefined
+  >((best, o) => {
+    if (!Number.isFinite(o.requiredGrossHome)) return best;
+    if (!best || o.requiredGrossHome < best.requiredGrossHome) return o;
+    return best;
+  }, undefined);
+
   const focused =
-    comparison.outcomes.find((o) => o.city.id === focusedId) ?? comparison.outcomes[0];
+    comparison.outcomes.find((o) => o.city.id === focusedId) ??
+    leader ??
+    comparison.outcomes[0];
 
   const setBasket = (cityId: string, categoryId: string, annual: number) =>
     update({
@@ -58,9 +71,6 @@ export default function App() {
   };
 
   const stale = comparison.outcomes.filter((o) => o.freshness !== 'fresh');
-
-  // Outcomes arrive sorted by the smallest ask, so the winner is the first one.
-  const leader = comparison.outcomes[0];
 
   return (
     <div className="relative min-h-screen">
@@ -273,18 +283,18 @@ export default function App() {
               </section>
 
               <p className="eyebrow mt-5 mb-2.5">
-                All three cities, lowest salary first
+                All three cities, {comparison.home.city.name} first, then A-Z
               </p>
               <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {comparison.outcomes.map((outcome, index) => (
+                {comparison.outcomes.map((outcome) => (
                   <CityCard
                     key={outcome.city.id}
                     outcome={outcome}
                     scenario={scenario}
                     homeCurrency={displayCurrency}
-                    leader={index === 0}
+                    leader={outcome.city.id === leader?.city.id}
                     behindLeader={
-                      index === 0 ||
+                      outcome.city.id === leader?.city.id ||
                       !leader ||
                       !Number.isFinite(outcome.requiredGrossHome) ||
                       !Number.isFinite(leader.requiredGrossHome)

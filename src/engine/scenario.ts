@@ -183,9 +183,14 @@ export function compare(
     };
   });
 
-  // Ranked by what the active mode optimises: the smallest ask that clears the
-  // bar. Switching modes reorders this list, which is the point.
-  outcomes.sort((a, b) => a.requiredGrossHome - b.requiredGrossHome);
+  // Fixed order: home city first, then the rest A-Z. Ranking by required
+  // salary used to reorder the cards on every slider drag as the numbers
+  // shifted — jarring mid-interaction. Callers that want the cheapest city
+  // (the "leader") compute it separately, by value, not by array position.
+  outcomes.sort((a, b) => {
+    if (a.isHome !== b.isHome) return a.isHome ? -1 : 1;
+    return a.city.name.localeCompare(b.city.name);
+  });
 
   return {
     home: {
