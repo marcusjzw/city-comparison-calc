@@ -227,6 +227,18 @@ body {
   font-feature-settings: 'tnum' 1;
 }
 
+/*
+ * Bodoni Moda only ships weights 500 and 700 (see the Google Fonts link in
+ * index.html). Left unset, headings request the browser default of 400,
+ * which this family doesn't have — the engine synthesizes something thin
+ * and poorly hinted instead of picking the loaded 500. Pin it to the bold
+ * face explicitly, which a high-contrast Didone like this needs anyway to
+ * read as a headline rather than fine print.
+ */
+.font-display {
+  font-weight: 700;
+}
+
 /* Visible focus everywhere. Keyboard reachability is a correctness bar item. */
 :where(button, input, select, a, [tabindex]):focus-visible {
   outline: 2px solid currentColor;
