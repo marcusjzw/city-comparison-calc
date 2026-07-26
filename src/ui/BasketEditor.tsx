@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { CityOutcome } from '../engine/scenario';
-import { categorySensitivity } from '../engine/solve';
-import type { Confidence, FilingStatus } from '../engine/types';
+import type { Confidence } from '../engine/types';
 import { money, percent, symbolFor } from '../lib/format';
 
 const CONFIDENCE_LABEL: Record<Confidence, string> = {
@@ -12,9 +11,6 @@ const CONFIDENCE_LABEL: Record<Confidence, string> = {
 
 interface Props {
   outcome: CityOutcome;
-  filingStatus: FilingStatus;
-  preTaxDeductions: number;
-  homeCurrency: string;
   ink: string;
   onSet: (categoryId: string, annual: number) => void;
   onReset: (categoryId?: string) => void;
@@ -24,71 +20,81 @@ interface Props {
 /**
  * The cost basket drill-down. Sliders and numeric inputs are bound to the same
  * state, so whichever the user reaches for, the other follows.
- *
- * The sensitivity strip ranks categories by how much a 10% change in each
- * moves the answer. Housing dominates everywhere, which is the point: it tells
- * the user exactly which number to go and research properly.
  */
 export function BasketEditor({
   outcome,
-  filingStatus,
-  preTaxDeductions,
-  homeCurrency,
   ink,
   onSet,
   onReset,
   overrides,
 }: Props) {
   const { city, basket, result } = outcome;
+  /* These sliders price a life in {city}, so they're denominated in the
+     city's own currency, not the display currency in the masthead. */
   const currency = city.currency;
 
-  const sensitivity = useMemo(
+  /* Every stored figure is annual, in city currency. Monthly is just a
+     display/entry convenience: divide by 12 to show, multiply by 12 before
+     it hits onSet, so the rest of the app never has to know this exists. */
+  const [entryMode, setEntryMode] = useState<'annual' | 'monthly'>('annual');
+  const toDisplay = (annual: number) => (entryMode === 'monthly' ? annual / 12 : annual);
+  const toAnnual = (value: number) => (entryMode === 'monthly' ? value * 12 : value);
+
+  const distribution = useMemo(
     () =>
-      categorySensitivity(
-        {
-          city,
-          filingStatus,
-          preTaxDeductions,
-          healthCost: result.healthCost,
-          fxToHome: outcome.fxToHome,
-        },
-        result.grossComp,
-        basket.map((line) => ({
+      [...basket]
+        .sort((a, b) => b.annual - a.annual)
+        .map((line) => ({
           id: line.id,
           label: line.label,
           annual: line.annual,
+          share: outcome.livingCost > 0 ? line.annual / outcome.livingCost : 0,
         })),
-      ),
-    [city, filingStatus, preTaxDeductions, result, basket, outcome.fxToHome],
+    [basket, outcome.livingCost],
   );
 
-  const topImpact = sensitivity[0]?.impact ?? 1;
   const edited = Object.keys(overrides).length > 0;
-  /* These sliders price a life in {city}, so they are denominated in the city's
-     own currency — not the display currency in the masthead. The two differ for
-     most sessions, and an unlabelled number here is a silent wrong answer. */
-  const mixed = currency !== homeCurrency;
 
   return (
     <div className="space-y-4">
       <div className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
         <p className="eyebrow">
-          What a year costs in {city.name}, in {currency}
+          What a {entryMode === 'monthly' ? 'month' : 'year'} costs in {city.name}, in {currency}
         </p>
-        {edited && (
-          <button
-            type="button"
-            onClick={() => onReset()}
-            className="shrink-0 font-mono text-[11px] text-muted underline underline-offset-2 hover:text-ink"
-          >
-            reset all
-          </button>
-        )}
+        <div className="flex shrink-0 items-baseline gap-3">
+          <div className="flex font-mono text-[11px] text-muted">
+            {(['monthly', 'annual'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setEntryMode(mode)}
+                aria-pressed={entryMode === mode}
+                className={`px-1 underline-offset-2 ${
+                  entryMode === mode ? 'text-ink underline' : 'hover:text-ink'
+                }`}
+              >
+                {mode === 'monthly' ? '/mo' : '/yr'}
+              </button>
+            ))}
+          </div>
+          {edited && (
+            <button
+              type="button"
+              onClick={() => onReset()}
+              className="font-mono text-[11px] text-muted underline underline-offset-2 hover:text-ink"
+            >
+              reset all
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-3">
         {basket.map((line) => {
           const ceiling = Math.max(line.median * 2.5, line.annual * 1.4, 1200);
+          const displayCeiling = toDisplay(ceiling);
+          const displayValue = toDisplay(line.annual);
+          const displayStep = entryMode === 'monthly' ? 10 : 100;
           const overridden = overrides[line.id] !== undefined;
           const drift = line.vsMedian - 1;
           return (
@@ -109,11 +115,11 @@ export function BasketEditor({
                   </span>
                   <input
                     type="number"
-                    value={Math.round(line.annual)}
-                    step={100}
+                    value={Math.round(displayValue)}
+                    step={displayStep}
                     min={0}
-                    aria-label={`${line.label} annual cost, ${currency}`}
-                    onChange={(event) => onSet(line.id, Number(event.target.value))}
+                    aria-label={`${line.label} ${entryMode} cost, ${currency}`}
+                    onChange={(event) => onSet(line.id, toAnnual(Number(event.target.value)))}
                     className="tnum w-[70px] border-b border-line bg-transparent pb-[2px] text-right font-mono text-[12px] text-ink focus:border-ink focus:outline-none"
                   />
                   <button
@@ -134,10 +140,10 @@ export function BasketEditor({
                   id={`basket-${city.id}-${line.id}`}
                   type="range"
                   min={0}
-                  max={Math.round(ceiling)}
-                  step={100}
-                  value={Math.round(line.annual)}
-                  onChange={(event) => onSet(line.id, Number(event.target.value))}
+                  max={Math.round(displayCeiling)}
+                  step={displayStep}
+                  value={Math.round(displayValue)}
+                  onChange={(event) => onSet(line.id, toAnnual(Number(event.target.value)))}
                   style={{ ['--stream' as string]: ink }}
                   className="h-1 w-full cursor-pointer appearance-none rounded bg-line"
                 />
@@ -158,7 +164,7 @@ export function BasketEditor({
                   style={{ color: drift > 0 ? ink : 'var(--color-muted)' }}
                 >
                   {drift > 0 ? '+' : '−'}
-                  {percent(Math.abs(drift), 0)} vs median {money(line.median, currency)}
+                  {percent(Math.abs(drift), 0)} vs median {money(toDisplay(line.median), currency)}
                 </p>
               )}
             </div>
@@ -177,24 +183,24 @@ export function BasketEditor({
 
       <div>
         <h4 className="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase">
-          Worth of a 10% change{mixed && `, back in ${homeCurrency}`}
+          Where it goes
         </h4>
         <div className="mt-2 space-y-2">
-          {sensitivity.map((entry) => (
+          {distribution.map((entry) => (
             <div key={entry.id}>
               <div className="flex items-baseline justify-between gap-2">
                 <span className="truncate font-sans text-[11px] text-muted">
                   {entry.label}
                 </span>
                 <span className="tnum shrink-0 font-mono text-[11px] text-ink">
-                  {money(entry.impact, homeCurrency)}
+                  {percent(entry.share, 0)}
                 </span>
               </div>
               <div className="mt-[3px] h-[5px] bg-line/60">
                 <div
                   className="h-full"
                   style={{
-                    width: `${topImpact > 0 ? (entry.impact / topImpact) * 100 : 0}%`,
+                    width: `${entry.share * 100}%`,
                     background: ink,
                     opacity: 0.75,
                   }}
@@ -203,9 +209,6 @@ export function BasketEditor({
             </div>
           ))}
         </div>
-        <p className="mt-2 font-mono text-[10px] text-muted/70">
-          on annual surplus
-        </p>
       </div>
     </div>
   );
