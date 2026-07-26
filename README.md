@@ -24,7 +24,7 @@ Node 20.19+ (`.nvmrc` pins 22).
 nvm use          # or any Node >= 20.19
 npm install
 npm run dev      # http://localhost:5173
-npm test         # engine + data invariants, 70 tests
+npm test         # engine + data invariants, 103 tests
 npm run build
 ```
 
@@ -40,6 +40,8 @@ src/engine/     pure TypeScript, zero DOM. The UI is a skin over this.
   scenario.ts   the three modes, ranking, one pure compare()
   validate.ts   ingestion invariants (also the ingestion pipeline's gate)
 src/data/       versioned JSON per city, plus runtime FX
+src/state/      React hooks: scenario (URL hash + localStorage), live FX, theme
+src/lib/        currency formatting, environment-based currency detection
 src/ui/         React. Nothing in here is imported by the engine.
 ```
 
