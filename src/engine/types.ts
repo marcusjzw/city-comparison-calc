@@ -140,12 +140,6 @@ export interface CityData {
 /* Computation inputs and outputs                                      */
 /* ------------------------------------------------------------------ */
 
-export interface CompPackage {
-  base: number;
-  /** Annualised value of equity. Ordinary income at vest in all three cities. */
-  equity: number;
-}
-
 export interface ForwardInput {
   city: CityData;
   grossComp: number;

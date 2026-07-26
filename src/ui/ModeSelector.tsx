@@ -1,21 +1,23 @@
 import { motion } from 'motion/react';
 import type { Mode } from '../engine/scenario';
 
+/* Labels say what you get, not what the model is called: "lifestyle parity" is
+   the engine's word for it, "live the same" is the reader's. */
 const MODES: { id: Mode; label: string; blurb: string }[] = [
   {
     id: 'lifestyle',
-    label: 'Lifestyle parity',
-    blurb: 'Same standard of living.',
+    label: 'Live the same',
+    blurb: 'Keep the standard of living you have now.',
   },
   {
     id: 'savings',
-    label: 'Savings parity',
-    blurb: 'Same annual savings, in home currency.',
+    label: 'Save the same',
+    blurb: 'Put away the same amount each year, back home.',
   },
   {
     id: 'goal',
-    label: 'Goal',
-    blurb: 'Your number, by your date.',
+    label: 'Hit a number',
+    blurb: 'Reach a savings target by a date you pick.',
   },
 ];
 
@@ -30,7 +32,6 @@ export function ModeSelector({
 
   return (
     <div>
-      <p className="eyebrow mb-2">What are you optimising for?</p>
       <div
         role="tablist"
         aria-label="Comparison mode"
@@ -61,7 +62,7 @@ export function ModeSelector({
           );
         })}
       </div>
-      <p className="mt-3 max-w-prose font-sans text-[13.5px] leading-relaxed text-muted">
+      <p className="mt-2.5 max-w-prose font-sans text-[13.5px] leading-relaxed text-muted">
         {active.blurb}
       </p>
     </div>

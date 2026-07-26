@@ -6,7 +6,7 @@ import { compare, type Mode, type Scenario } from './scenario';
 const BASE_SCENARIO: Scenario = {
   homeCityId: 'sydney',
   displayCurrency: 'AUD',
-  current: { base: 181_500, equity: 130_000, annualSavings: 100_000 },
+  current: { comp: 311_500, annualSavings: 100_000 },
   homeSpendOverride: null,
   filingStatus: 'married_joint',
   preTaxDeductions: 0,

@@ -3,11 +3,11 @@ import { FALLBACK_CURRENCY, isSupportedCurrency } from '../data/currencies';
 import type { Scenario } from '../engine/scenario';
 import { detectCurrencyFromEnvironment } from '../lib/detectCurrency';
 
-/** The user in the brief: a Sydney senior with meaningful equity and a deposit in mind. */
+/** The user in the brief: a Sydney senior on A$311,500 all-in with a deposit in mind. */
 export const DEFAULT_SCENARIO: Scenario = {
   homeCityId: 'sydney',
   displayCurrency: FALLBACK_CURRENCY,
-  current: { base: 181_500, equity: 130_000, annualSavings: 100_000 },
+  current: { comp: 311_500, annualSavings: 100_000 },
   homeSpendOverride: null,
   filingStatus: 'married_joint',
   preTaxDeductions: 0,
@@ -46,6 +46,27 @@ function resolveCurrency(stored: unknown): string {
   return detectCurrencyFromEnvironment().currency;
 }
 
+/**
+ * Links minted before comp was a single figure carry `{ base, equity }`. They
+ * are out in the world already, so they get folded into the one number rather
+ * than silently falling back to the default salary.
+ */
+type LegacyComp = Partial<Scenario['current']> & { base?: number; equity?: number };
+
+export function resolveComp(stored: unknown): Scenario['current'] {
+  if (!stored || typeof stored !== 'object') return DEFAULT_SCENARIO.current;
+  const legacy = stored as LegacyComp;
+  const annualSavings =
+    typeof legacy.annualSavings === 'number'
+      ? legacy.annualSavings
+      : DEFAULT_SCENARIO.current.annualSavings;
+  if (typeof legacy.comp === 'number') return { comp: legacy.comp, annualSavings };
+  if (typeof legacy.base === 'number' || typeof legacy.equity === 'number') {
+    return { comp: (legacy.base ?? 0) + (legacy.equity ?? 0), annualSavings };
+  }
+  return { ...DEFAULT_SCENARIO.current, annualSavings };
+}
+
 function decode(raw: string): Scenario | null {
   try {
     const parsed = JSON.parse(decodeURIComponent(atob(raw))) as Partial<Scenario>;
@@ -54,6 +75,7 @@ function decode(raw: string): Scenario | null {
     return {
       ...DEFAULT_SCENARIO,
       ...parsed,
+      current: resolveComp(parsed.current),
       goal: { ...DEFAULT_SCENARIO.goal, ...parsed.goal },
       displayCurrency: resolveCurrency(parsed.displayCurrency),
     };

@@ -19,30 +19,39 @@ interface Props {
   outcome: CityOutcome;
   scenario: Scenario;
   homeCurrency: string;
-  rank: number;
   leader: boolean;
+  /**
+   * How much more this city has to pay you than the cheapest ask does, and
+   * whose ask that is. Null on the leader itself.
+   *
+   * This replaced a 1st/2nd/3rd ordinal. In a parity mode "2nd" reads like a
+   * league table with no stated event — the cities are not competing, one of
+   * them simply has to pay you more to stand still. Naming the gap says what
+   * the ordinal was standing in for.
+   */
+  behindLeader: { name: string; extraHome: number } | null;
   focused: boolean;
   openPanel: Panel | null;
   onFocus: () => void;
   onTogglePanel: (panel: Panel) => void;
   onSetBasket: (cityId: string, categoryId: string, annual: number) => void;
   onResetBasket: (cityId: string, categoryId?: string) => void;
+  onFilingStatus: (status: Scenario['filingStatus']) => void;
 }
-
-const ORDINAL = ['', '1st', '2nd', '3rd', '4th', '5th', '6th'];
 
 export function CityCard({
   outcome,
   scenario,
   homeCurrency,
-  rank,
   leader,
+  behindLeader,
   focused,
   openPanel,
   onFocus,
   onTogglePanel,
   onSetBasket,
   onResetBasket,
+  onFilingStatus,
 }: Props) {
   const { city, result } = outcome;
   const ink = inkFor(city.currency);
@@ -86,19 +95,11 @@ export function CityCard({
         />
       )}
 
-      <div className="relative p-5">
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-baseline gap-2.5">
-            <span
-              className="font-mono text-[11px] tabular-nums"
-              style={{ color: leader && !unreachable ? ink : 'var(--color-faint)' }}
-            >
-              {unreachable ? '—' : ORDINAL[rank] ?? `${rank}th`}
-            </span>
-            <h3 className="font-display text-[23px] leading-none text-ink">
-              {city.name}
-            </h3>
-          </div>
+      <div className="relative p-4">
+        <header className="flex items-baseline justify-between gap-2">
+          <h3 className="font-display text-[22px] leading-tight text-ink">
+            {city.name}
+          </h3>
           {leader && !unreachable && (
             <span
               className="shrink-0 rounded-full px-2.5 py-1 font-mono text-[9.5px] font-medium tracking-[0.12em] uppercase text-ground"
@@ -112,10 +113,10 @@ export function CityCard({
         {/* 1. Required gross, the number the user is going to negotiate for.
             Rendered in the city's own ink: the identity system doing real work
             rather than three interchangeable white numbers. */}
-        <div className="mt-5">
-          <p className="eyebrow">Gross comp needed</p>
+        <div className="mt-2.5">
+          <p className="eyebrow">Ask for, before tax</p>
           {unreachable ? (
-            <p className="mt-1.5 font-display text-[34px] leading-none text-muted">
+            <p className="mt-1 font-display text-[30px] leading-none text-muted">
               out of reach
             </p>
           ) : (
@@ -123,42 +124,40 @@ export function CityCard({
               <AnimatedNumber
                 value={outcome.requiredGross}
                 format={(v) => moneyCompact(v, city.currency)}
-                className="mt-1.5 block font-mono text-[42px] leading-none font-medium"
+                className="mt-1 block font-mono text-[36px] leading-none font-medium"
                 style={{ color: ink }}
               />
               <AnimatedNumber
                 value={outcome.requiredGrossHome}
                 format={(v) => money(v, homeCurrency)}
-                className="mt-2 block font-mono text-[13px] text-muted"
+                className="tnum mt-1 block font-mono text-[11.5px] text-muted"
               />
+              {behindLeader && (
+                <p className="tnum mt-0.5 font-mono text-[11px] text-faint">
+                  {money(behindLeader.extraHome, homeCurrency)} more than{' '}
+                  {behindLeader.name}
+                </p>
+              )}
             </>
           )}
         </div>
 
-        {/* 2. Suggested split, on the same base-to-equity ratio as today. */}
-        {!unreachable && (
-          <p className="mt-3 font-mono text-[11px] text-muted">
-            ≈ {money(outcome.suggestedSplit.base, city.currency)} base +{' '}
-            {money(outcome.suggestedSplit.equity, city.currency)} equity
-          </p>
-        )}
-
-        {/* 3 and 4. Surplus and years, the two figures the modes trade off. */}
-        <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line pt-4">
+        {/* 2 and 3. Surplus and years, the two figures the modes trade off. */}
+        <dl className="mt-3 grid grid-cols-2 gap-x-3 border-t border-line pt-2.5">
           <div>
-            <dt className="eyebrow">Surplus home</dt>
-            <dd className="mt-1">
+            <dt className="eyebrow">Left over a year</dt>
+            <dd className="mt-0.5">
               <AnimatedNumber
                 value={result[metric]}
                 format={(v) => money(v, homeCurrency)}
-                className="font-mono text-[17px] text-ink"
+                className="font-mono text-[16px] text-ink"
               />
             </dd>
           </div>
           <div>
             <dt className="eyebrow">Years to goal</dt>
             <dd
-              className="tnum mt-1 font-mono text-[17px]"
+              className="tnum mt-0.5 font-mono text-[16px]"
               style={{ color: Number.isFinite(outcome.years) ? ink : 'var(--color-muted)' }}
             >
               {years(outcome.years)}
@@ -166,9 +165,9 @@ export function CityCard({
           </div>
         </dl>
 
-        {/* 5. Supporting evidence, small. */}
-        <p className="mt-4 font-mono text-[11px] text-muted">
-          {percent(result.effectiveTaxRate)} effective ·{' '}
+        {/* 4. Supporting evidence, small. */}
+        <p className="mt-2.5 font-mono text-[11px] text-muted">
+          {percent(result.effectiveTaxRate)} tax ·{' '}
           {money(outcome.livingCost + result.healthCost, city.currency)} to live
           {result.employerRetirement > 0 && (
             <>
@@ -178,11 +177,43 @@ export function CityCard({
           )}
         </p>
 
+        {/* Filing status belongs to whichever city actually files that way. It
+            moved off the global setup panel because it changes this card's tax
+            and nothing else on the page. */}
+        {city.filingStatuses?.length ? (
+          <div
+            className="mt-2.5 flex items-baseline justify-between gap-2"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <label
+              htmlFor={`filing-${city.id}`}
+              className="font-mono text-[11px] text-muted"
+            >
+              You file as
+            </label>
+            <select
+              id={`filing-${city.id}`}
+              value={scenario.filingStatus}
+              onChange={(event) =>
+                onFilingStatus(event.target.value as Scenario['filingStatus'])
+              }
+              className="border-b border-line bg-transparent pb-[1px] text-right font-mono text-[11px] text-ink focus:border-ink focus:outline-none"
+            >
+              <option value="single" className="bg-plate">
+                Single
+              </option>
+              <option value="married_joint" className="bg-plate">
+                Married, jointly
+              </option>
+            </select>
+          </div>
+        ) : null}
+
         {/* Drill-down tabs. Bordered chips so they read as controls, not
             leftover text — and a leading "Break it down" cue so a first-timer
             knows they open something. */}
-        <div className="mt-4 border-t border-line pt-3">
-          <p className="eyebrow mb-2">Break it down</p>
+        <div className="mt-3.5 border-t border-line pt-3">
+          <p className="eyebrow mb-2">Show me the numbers</p>
           <div className="flex flex-wrap gap-1.5">
             {(Object.keys(PANEL_LABEL) as Panel[]).map((panel) => {
               const active = openPanel === panel;
@@ -263,7 +294,7 @@ export function CityCard({
 
         {/* Tax figures never appear without their stamp and a way through to
             the source. One line does that; the full list is one click away. */}
-        <footer className="mt-5 border-t border-line pt-3">
+        <footer className="mt-4 border-t border-line pt-2.5">
           <p className="font-mono text-[10px] text-faint">
             <a
               href={city.sources[0]?.url}

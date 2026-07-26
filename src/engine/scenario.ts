@@ -7,7 +7,7 @@ import {
   scaleFactorFor,
   type Basket,
 } from './basket';
-import { forward, splitComp, staleness } from './forward';
+import { forward, staleness } from './forward';
 import { rateToHome, shiftFx, type FxTable } from './fx';
 import {
   requiredAnnualSurplus,
@@ -31,7 +31,13 @@ export interface Scenario {
    * of the scenario a shared link has to reproduce.
    */
   displayCurrency: string;
-  current: { base: number; equity: number; annualSavings: number };
+  /**
+   * Total annual compensation, not a base/equity split. Every seeded city
+   * taxes salary and vesting equity as ordinary income at the same rate, so
+   * splitting them changed nothing in the answer and asked the reader for a
+   * number most of them do not have.
+   */
+  current: { comp: number; annualSavings: number };
   /** Overrides the inferred home spend when the user corrects it. */
   homeSpendOverride: number | null;
   filingStatus: FilingStatus;
@@ -53,7 +59,6 @@ export interface CityOutcome {
   /** Required gross comp, in city currency. `Infinity` when unreachable. */
   requiredGross: number;
   requiredGrossHome: number;
-  suggestedSplit: { base: number; equity: number };
   result: ForwardResult;
   basket: Basket;
   livingCost: number;
@@ -103,7 +108,7 @@ export function compare(
     ? 'totalValueHome'
     : 'surplusHome';
 
-  const homeGross = scenario.current.base + scenario.current.equity;
+  const homeGross = scenario.current.comp;
   const homeFx = fxFor(fx, homeCity, scenario.fxShifts);
   const homeHealth = scenario.healthOverrides[homeCity.id] ?? homeCity.healthAnnualCost;
 
@@ -180,7 +185,6 @@ export function compare(
       city,
       requiredGross: gross,
       requiredGrossHome: gross * fxToHome,
-      suggestedSplit: splitComp(gross, scenario.current),
       result,
       basket,
       livingCost,
