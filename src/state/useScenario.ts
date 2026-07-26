@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { CITIES } from '../data/cities';
 import { FALLBACK_CURRENCY, isSupportedCurrency } from '../data/currencies';
 import type { Scenario } from '../engine/scenario';
 import { detectCurrencyFromEnvironment } from '../lib/detectCurrency';
+
+/**
+ * The cities compared out of the box. Named explicitly rather than "all of
+ * `CITIES`" — a city added to the data set later should be something a
+ * reader opts into from the selector, not something that silently appears
+ * in everyone's comparison.
+ */
+const DEFAULT_CITY_IDS = ['sydney', 'singapore', 'san-francisco'];
 
 /** The user in the brief: a Sydney senior on A$311,500 all-in with a deposit in mind. */
 export const DEFAULT_SCENARIO: Scenario = {
@@ -21,6 +30,7 @@ export const DEFAULT_SCENARIO: Scenario = {
   basketOverrides: {},
   healthOverrides: {},
   fxShifts: {},
+  selectedCityIds: DEFAULT_CITY_IDS,
 };
 
 const STORAGE_KEY = 'roundtrip.scenario.v1';
@@ -68,6 +78,20 @@ export function resolveComp(stored: unknown): Scenario['current'] {
   return DEFAULT_SCENARIO.current;
 }
 
+/**
+ * A link may name a city that has since been renamed or dropped, or predate
+ * the selector entirely. Either way, drop what no longer resolves rather
+ * than crash on it, and fall back to the smart default instead of an empty
+ * comparison.
+ */
+function resolveSelectedCityIds(stored: unknown): string[] {
+  const known = new Set(CITIES.map((c) => c.id));
+  const ids = Array.isArray(stored)
+    ? stored.filter((id): id is string => typeof id === 'string' && known.has(id))
+    : [];
+  return ids.length > 0 ? ids : DEFAULT_CITY_IDS;
+}
+
 function decode(raw: string): Scenario | null {
   try {
     const parsed = JSON.parse(decodeURIComponent(atob(raw))) as Partial<Scenario>;
@@ -79,6 +103,7 @@ function decode(raw: string): Scenario | null {
       current: resolveComp(parsed.current),
       goal: { ...DEFAULT_SCENARIO.goal, ...parsed.goal },
       displayCurrency: resolveCurrency(parsed.displayCurrency),
+      selectedCityIds: resolveSelectedCityIds(parsed.selectedCityIds),
     };
   } catch {
     return null;

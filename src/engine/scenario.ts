@@ -51,6 +51,13 @@ export interface Scenario {
   healthOverrides: Record<string, number>;
   /** Per currency "what if the rate moves" shift, as a signed fraction. */
   fxShifts: Record<string, number>;
+  /**
+   * Which cities appear in the comparison, beyond the home city (which is
+   * always in — there's nothing to compare against without it). Lives here,
+   * not just in component state, so a shared link reproduces the same set of
+   * cards the sender was looking at.
+   */
+  selectedCityIds: string[];
 }
 
 export interface CityOutcome {

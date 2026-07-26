@@ -6,6 +6,7 @@ import { useFx } from './state/useFx';
 import { useScenario } from './state/useScenario';
 import { useTheme } from './state/useTheme';
 import { CityCard, type Panel } from './ui/CityCard';
+import { CitySelector } from './ui/CitySelector';
 import { CurrencySelector } from './ui/CurrencySelector';
 import { Disclosure } from './ui/Disclosure';
 import { FlowRibbon } from './ui/FlowRibbon';
@@ -27,10 +28,29 @@ export default function App() {
 
   const { table: fx, history, live } = useFx(displayCurrency, CURRENCIES);
 
-  const comparison = useMemo(
-    () => compare(scenario, CITIES, fx),
-    [scenario, fx],
+  // The home city is always in the comparison — there's nothing to solve
+  // for without it — so it's unioned in here rather than relying on the
+  // selector to keep itself in sync when the home city changes underneath it.
+  const selectedIds = useMemo(
+    () => new Set([...scenario.selectedCityIds, scenario.homeCityId]),
+    [scenario.selectedCityIds, scenario.homeCityId],
   );
+  const citiesInPlay = useMemo(
+    () => CITIES.filter((city) => selectedIds.has(city.id)),
+    [selectedIds],
+  );
+
+  const comparison = useMemo(
+    () => compare(scenario, citiesInPlay, fx),
+    [scenario, citiesInPlay, fx],
+  );
+
+  const toggleCity = (cityId: string) => {
+    const next = new Set(scenario.selectedCityIds);
+    if (next.has(cityId)) next.delete(cityId);
+    else next.add(cityId);
+    update({ selectedCityIds: [...next] });
+  };
 
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [panels, setPanels] = useState<Record<string, Panel | null>>({});
@@ -282,9 +302,19 @@ export default function App() {
                 />
               </section>
 
-              <p className="eyebrow mt-5 mb-2.5">
-                All three cities, {comparison.home.city.name} first, then A-Z
-              </p>
+              <div className="mt-5 mb-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <p className="eyebrow">
+                  {citiesInPlay.length > 1
+                    ? `${citiesInPlay.length} cities, ${comparison.home.city.name} first, then A-Z`
+                    : `${comparison.home.city.name} only — add a city to compare`}
+                </p>
+                <CitySelector
+                  cities={CITIES}
+                  selectedIds={selectedIds}
+                  homeCityId={scenario.homeCityId}
+                  onToggle={toggleCity}
+                />
+              </div>
               <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {comparison.outcomes.map((outcome) => (
                   <CityCard
