@@ -36,8 +36,6 @@ export function requiredGross(
 export interface GoalInput {
   /** Target amount in home currency, today's money. */
   target: number;
-  /** Capital already saved toward it, in home currency. */
-  existingCapital: number;
   /** How fast the thing you are saving for gets more expensive. */
   goalGrowthRate: number;
 }
@@ -53,11 +51,10 @@ export function yearsToGoal(
   goal: GoalInput,
   maxYears = 60,
 ): number {
-  const { target, existingCapital, goalGrowthRate } = goal;
-  if (existingCapital >= target) return 0;
+  const { target, goalGrowthRate } = goal;
   if (annualSurplus <= 0) return Infinity;
 
-  let capital = existingCapital;
+  let capital = 0;
   let goalAmount = target;
 
   for (let year = 1; year <= maxYears; year++) {
@@ -84,7 +81,7 @@ export function yearsToGoal(
 export function requiredAnnualSurplus(goal: GoalInput, years: number): number {
   if (years <= 0) return Infinity;
   const grown = goal.target * Math.pow(1 + goal.goalGrowthRate, years);
-  return Math.max(0, (grown - goal.existingCapital) / years);
+  return Math.max(0, grown / years);
 }
 
 /**

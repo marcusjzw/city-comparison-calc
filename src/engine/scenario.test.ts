@@ -12,7 +12,6 @@ const BASE_SCENARIO: Scenario = {
   preTaxDeductions: 0,
   goal: {
     target: 400_000,
-    existingCapital: 60_000,
     goalGrowthRate: 0.05,
     years: 4,
   },
@@ -134,7 +133,7 @@ describe('unreachable targets', () => {
   it('reports Infinity rather than inventing a number', () => {
     const { outcomes } = run({
       mode: 'goal',
-      goal: { target: 50_000_000, existingCapital: 0, goalGrowthRate: 0.05, years: 2 },
+      goal: { target: 50_000_000, goalGrowthRate: 0.05, years: 2 },
     });
     expect(outcomes.every((o) => o.requiredGross === Infinity)).toBe(true);
   });

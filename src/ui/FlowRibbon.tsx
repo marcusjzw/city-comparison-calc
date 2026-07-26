@@ -101,25 +101,21 @@ export function FlowRibbon({
   const grownTarget =
     goal.target * Math.pow(1 + goal.goalGrowthRate, goal.years);
   const accumulated =
-    goal.existingCapital +
     Math.max(0, result[countRetirement ? 'totalValueHome' : 'surplusHome']) *
-      goal.years;
+    goal.years;
   const fill = grownTarget > 0 ? accumulated / grownTarget : 0;
-  const existingFill = grownTarget > 0 ? goal.existingCapital / grownTarget : 0;
 
   // One spring vector drives everything: six stream shares, the retirement
-  // share, the reservoir fill, and the already-banked portion of it.
+  // share, and the reservoir fill.
   const targets = [
     ...STREAMS.map((s) => amounts[s.key] / gross),
     result.employerRetirement / gross,
     Math.min(fill, 1.25),
-    Math.min(existingFill, 1.25),
   ];
   const springs = useSpringVector(targets);
   const shares = springs.slice(0, STREAMS.length);
   const retirementShare = springs[STREAMS.length];
   const fillNow = springs[STREAMS.length + 1];
-  const existingNow = springs[STREAMS.length + 2];
 
   // Entry: contiguous stack. Fan: same order, spaced out and re-centred.
   const heights = shares.map((share) => Math.max(0, share) * STACK_H);
@@ -150,10 +146,6 @@ export function FlowRibbon({
   const fillHeight = Math.min(
     RESERVOIR_H,
     Math.max(0, fillNow) * GOAL_FRACTION * RESERVOIR_H,
-  );
-  const existingHeight = Math.min(
-    fillHeight,
-    Math.max(0, existingNow) * GOAL_FRACTION * RESERVOIR_H,
   );
 
   return (
@@ -297,14 +289,6 @@ export function FlowRibbon({
           height={fillHeight}
           fill={homeInk}
           opacity={0.55}
-        />
-        <rect
-          x={RESERVOIR_X}
-          y={RESERVOIR_TOP + RESERVOIR_H - existingHeight}
-          width={RESERVOIR_W}
-          height={existingHeight}
-          fill={homeInk}
-          opacity={0.35}
         />
         {/* Surface line: the reservoir reads as filling rather than as a bar. */}
         {fillHeight > 0.5 && (

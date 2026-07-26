@@ -27,7 +27,7 @@ export function GoalCurve({
   const H = 150;
   const PAD = { l: 8, r: 8, t: 14, b: 20 };
 
-  const capitalAt = (year: number) => goal.existingCapital + annualSurplus * year;
+  const capitalAt = (year: number) => annualSurplus * year;
   const targetAt = (year: number) =>
     goal.target * Math.pow(1 + goal.goalGrowthRate, year);
 
@@ -93,10 +93,6 @@ export function GoalCurve({
       <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-[11px]">
         <dt className="text-muted">Target today</dt>
         <dd className="tnum text-right text-ink">{money(goal.target, homeCurrency)}</dd>
-        <dt className="text-muted">Already saved</dt>
-        <dd className="tnum text-right text-ink">
-          {money(goal.existingCapital, homeCurrency)}
-        </dd>
         <dt className="text-muted">Annual surplus</dt>
         <dd className="tnum text-right text-ink">
           {money(annualSurplus, homeCurrency)}

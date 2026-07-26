@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 import type { CityOutcome, Scenario } from '../engine/scenario';
-import { inkFor, money, moneyCompact, percent, shortDate, years } from '../lib/format';
+import { inkFor, money, moneyCompact, percent, shortDate } from '../lib/format';
 import { AnimatedNumber } from './AnimatedNumber';
 import { BasketEditor } from './BasketEditor';
 import { BracketLadder } from './BracketLadder';
@@ -142,8 +142,8 @@ export function CityCard({
           )}
         </div>
 
-        {/* 2 and 3. Surplus and years, the two figures the modes trade off. */}
-        <dl className="mt-3 grid grid-cols-2 gap-x-3 border-t border-line pt-2.5">
+        {/* 2. Surplus, the figure the modes trade off. */}
+        <dl className="mt-3 border-t border-line pt-2.5">
           <div>
             <dt className="eyebrow">Left over a year</dt>
             <dd className="mt-0.5">
@@ -152,15 +152,6 @@ export function CityCard({
                 format={(v) => money(v, homeCurrency)}
                 className="font-mono text-[16px] text-ink"
               />
-            </dd>
-          </div>
-          <div>
-            <dt className="eyebrow">Years to goal</dt>
-            <dd
-              className="tnum mt-0.5 font-mono text-[16px]"
-              style={{ color: Number.isFinite(outcome.years) ? ink : 'var(--color-muted)' }}
-            >
-              {years(outcome.years)}
             </dd>
           </div>
         </dl>
