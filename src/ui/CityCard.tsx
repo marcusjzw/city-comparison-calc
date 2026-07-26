@@ -248,9 +248,6 @@ export function CityCard({
                 {openPanel === 'living' && (
                   <BasketEditor
                     outcome={outcome}
-                    filingStatus={scenario.filingStatus}
-                    preTaxDeductions={scenario.preTaxDeductions}
-                    homeCurrency={homeCurrency}
                     ink={ink}
                     overrides={scenario.basketOverrides[city.id] ?? {}}
                     onSet={(categoryId, annual) =>
