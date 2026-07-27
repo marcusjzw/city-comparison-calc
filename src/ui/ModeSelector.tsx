@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import type { Mode } from '../engine/scenario';
 
 /* Labels say what you get, not what the model is called: "lifestyle parity" is
@@ -39,7 +39,7 @@ export function ModeSelector({
   // the slide would stutter or skip. A plain CSS transition on `transform` is
   // handed to the compositor once and then runs on its own — the pill still
   // glides even while the rest of the page is busy.
-  useLayoutEffect(() => {
+  const measure = useCallback(() => {
     const button = buttonRefs.current[mode];
     const pill = pillRef.current;
     if (!button || !pill) return;
@@ -47,6 +47,19 @@ export function ModeSelector({
     pill.style.height = `${button.offsetHeight}px`;
     pill.style.transform = `translate(${button.offsetLeft}px, ${button.offsetTop}px)`;
   }, [mode]);
+
+  useLayoutEffect(measure, [measure]);
+
+  // On first paint the mono font the labels use may not have loaded yet, so
+  // the very first measurement can be taken against fallback-font metrics —
+  // narrower or wider than the real thing, which is why the pill only looked
+  // right once a click forced a re-measure. Re-measure once the real font is
+  // in, and once more on resize since wrapping can change button widths too.
+  useLayoutEffect(() => {
+    document.fonts.ready.then(measure);
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [measure]);
 
   return (
     <div>
