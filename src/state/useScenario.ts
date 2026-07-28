@@ -12,11 +12,12 @@ import { detectCurrencyFromEnvironment } from '../lib/detectCurrency';
  */
 const DEFAULT_CITY_IDS = ['sydney', 'singapore', 'san-francisco'];
 
-/** The user in the brief: a Sydney senior on A$311,500 all-in with a deposit in mind. */
+/** A round, deliberately generic starting salary — real enough to compute
+ *  with, vague enough that nobody mistakes it for a real person's number. */
 export const DEFAULT_SCENARIO: Scenario = {
   homeCityId: 'sydney',
   displayCurrency: FALLBACK_CURRENCY,
-  current: { comp: 311_500 },
+  current: { comp: 200_000 },
   homeSpendOverride: null,
   filingStatus: 'married_joint',
   preTaxDeductions: 0,
